@@ -1,0 +1,416 @@
+---
+title: ""
+subtitle: ""
+author: 
+  - Yawen Tan
+thanks: "Code and data are available at: [https://github.com/YawennnnnnTan/Analysis-of-Diamond-Price]"
+date: today
+date-format: long
+abstract: ""
+format: pdf
+number-sections: true
+bibliography: references.bib
+toc: true
+---
+
+```{r}
+#| include: false
+#| warning: false
+#| message: false
+
+library(readr)
+library(arrow)
+library(here)
+library(ggplot2)
+library(patchwork)
+
+raw_data <- read_delim(here("data/01-raw_data/diamondprice.txt"), delim = "\t")
+cleaned_data <- read_parquet(here("data/02-analysis_data/cleaned_diamondprice.parquet"))
+train_data <- read_parquet(here("data/02-analysis_data/diamondprice_train_data.parquet"))
+test_data <- read_parquet(here("data/02-analysis_data/diamondprice_test_data.parquet"))
+
+model_glm <- readRDS(here("models/glm.rds"))
+model_lm <- readRDS(here("models/lm.rds"))
+
+``` 
+
+
+# Introduction 
+
+
+# Data {#sec-data}
+
+## Measurement 
+
+## Outcome Variable
+
+在appendix里面加入一个关于所有变量的table，然后在这里引用，说明变量类型什么的
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-price
+#| fig-cap: "Graphs of Diamond price"
+
+# Graph histogram
+# Calculate the mean of diamond prices
+mean_price <- mean(cleaned_data$price, na.rm = TRUE)
+# Create the histogram with mean line and density curve
+histogram_plot <- ggplot(cleaned_data, aes(x = price)) +
+  geom_histogram(binwidth = 500, fill = "pink", color = "black", alpha = 0.7) + 
+  geom_vline(xintercept = mean_price, linetype = "dashed", color = "salmon") + # Add a dashed vertical line for the mean
+  labs(
+    x = "Diamond Price",
+    y = "Count"
+  ) +
+  theme_minimal() # Use a minimal theme for clean visualization
+
+
+# Graph boxplot
+boxplot <- ggplot(cleaned_data, aes(x = "", y = price)) +
+  geom_boxplot(fill = "lightblue", color = "black", alpha = 0.7, outlier.colour = "salmon") +
+  labs(
+    x = "",
+    y = "Diamond Price"
+  ) +
+  theme_minimal()
+
+# Combine 2 plots
+combined_plot <- histogram_plot | boxplot
+combined_plot
+
+```
+
+
+
+## Predictor Variables
+在appendix里面加入一个关于所有变量的table，然后在这里引用，说明变量类型什么的
+解释每个变量：含义是什么，包括什么值，如何排序
+###  Predictor Variables
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-color
+#| fig-cap: "Graphs of Predictor Variables: Color"
+
+
+# Predictor Variables: Color
+# Create the histogram with mean line and density curve
+
+color_histogram_plot <- ggplot(cleaned_data, aes(x = color)) +
+  geom_bar(binwidth = 3,fill = "lightblue", color = "black", alpha = 0.7) + 
+  #scale_x_continuous(
+  #  breaks = 1:8, 
+  #  labels = c("D", "E", "F", "G", "H", "I", "J", "K"))+
+  labs(
+    title ="Distribution of Variable: Color",
+    x = "Diamond Color",
+    y = "Count") +
+  theme_minimal() # Use a minimal theme for clean visualization
+
+
+plot_color <- ggplot(cleaned_data, aes(x = color, y = price,group = 1))+
+  geom_point(color = "pink", alpha = 0.7) + 
+  geom_smooth(method = "lm", color = "black", se = FALSE) + 
+  labs(
+    title = "Color vs Price",
+    x = "Color",
+    y = "Diamond Price"
+  ) +
+  theme_minimal()
+
+combined_plot <- color_histogram_plot | plot_color
+combined_plot
+
+
+
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-carat_size
+#| fig-cap: "Graphs of Predictor Variable: Carat Size"
+
+
+# Graph histogram
+# Calculate the mean of diamond prices
+mean_size <- mean(cleaned_data$carat_size, na.rm = TRUE)
+carat_size_histogram_plot <- ggplot(cleaned_data, aes(x = carat_size)) +
+  geom_histogram(fill = "palevioletred", color = "black", alpha = 0.7) +
+  geom_vline(xintercept = mean_size, linetype = "dashed", color = "salmon") +
+  labs(
+    title = "Distribution of Variable: Carat Size",
+    x = "Diamond Carat Size",
+    y = "Count"
+  ) +
+  theme_minimal() # Use a minimal theme for clean visualization
+
+
+plot_carat_size <- ggplot(cleaned_data, aes(x = carat_size, y = price)) +
+  geom_point(color = "lightblue", alpha = 0.7) +
+  geom_smooth(method = "loess", color = "black", se = FALSE) +
+  labs(
+    title = "Carat Size vs Price",
+    x = "Carat Size",
+    y = "Diamond Price"
+  ) +
+  theme_minimal()
+
+
+# Combine 2 plots
+combined_plot <- carat_size_histogram_plot | plot_carat_size
+combined_plot
+
+
+```
+
+
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-clarity
+#| fig-cap: "Graphs of Predictor Variable: Clarity"
+
+
+# Graph histogram
+# Create the histogram with mean line
+clarity_histogram_plot <- ggplot(cleaned_data, aes(x = clarity)) +
+  geom_bar(bins = 20, fill = "lightblue", color = "black", alpha = 0.7) +
+  labs(
+    title = "Distribution of Variable: Clarity",
+    x = "Diamond Clarity",
+    y = "Count"
+  ) +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+plot_clarity <- ggplot(cleaned_data, aes(x = clarity, y = price, group=1)) +
+  geom_point(color = "pink", alpha = 0.7) +
+  geom_smooth(method = "loess", color = "black", se = FALSE) +
+  labs(
+    title = "Clarity vs Price",
+    x = "Clarity",
+    y = "Diamond Price"
+  ) +
+  theme_minimal()+ 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+# Combine 2 plots
+combined_plot <- clarity_histogram_plot | plot_clarity
+combined_plot
+
+
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-cut
+#| fig-cap: "Graphs of Predictor Variable: Cut"
+
+
+# Graph histogram
+# Create the histogram with mean line
+clarity_histogram_plot <- ggplot(cleaned_data, aes(x = cut)) +
+  geom_bar(bins = 20, fill = "palevioletred", color = "black", alpha = 0.7)+
+  labs(
+    title = "Distribution of Variable: Cut",
+    x = "Diamond Cut",
+    y = "Count"
+  ) +
+  theme_minimal() # Use a minimal theme for clean visualization
+
+
+plot_cut <- ggplot(cleaned_data, aes(x = cut, y = price,group=1)) +
+  geom_point(color = "lightblue", alpha = 0.7) +
+  geom_smooth(method = "loess", color = "black", se = FALSE) +
+  labs(
+    title = "Cut vs Price",
+    x = "Cut",
+    y = "Diamond Price"
+  ) +
+  theme_minimal()
+
+
+# Combine 2 plots
+combined_plot <- clarity_histogram_plot | plot_cut
+combined_plot
+
+
+```
+
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-correlation
+#| fig-cap: "Correlation"
+
+#mosaic plot
+library(vcd)
+table_data <- xtabs(~ cut + clarity + color, data = cleaned_data)
+
+highlighting_colors <- grDevices::rainbow(8, alpha = 0.5)  # alpha 
+options(repr.plot.width = 12, repr.plot.height = 12)  # 宽度和高度可根据需要调整
+
+mosaic(~ cut + clarity + color, data = table_data,
+       highlighting = "color",                      # 设置高亮变量为 color
+       highlighting_fill = highlighting_colors,    # 使用生成的浅色彩虹
+       direction = c("h", "v", "h"), # 控制变量的排列方向
+       main = "Relationship Between Cut, Clarity, and Color")
+
+
+```
+
+
+
+
+
+## Data Cleaning {#sec-datacleaning}
+
+
+
+### Data Split
+
+
+
+# Model
+
+The goal of our modelling strategy is twofold. Firstly,...
+
+Here we briefly describe the Bayesian analysis model used to investigate... Background details and diagnostics are included in [Appendix -@sec-model-details].
+
+## Model set-up
+
+Define $y_i$ as the number of seconds that the plane remained aloft. Then $\beta_i$ is the wing width and $\gamma_i$ is the wing length, both measured in millimeters.  
+
+\begin{align} 
+y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma) \\
+\mu_i &= \alpha + \beta_i + \gamma_i\\
+\alpha &\sim \mbox{Normal}(0, 2.5) \\
+\beta &\sim \mbox{Normal}(0, 2.5) \\
+\gamma &\sim \mbox{Normal}(0, 2.5) \\
+\sigma &\sim \mbox{Exponential}(1)
+\end{align}
+
+We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
+
+
+### Model justification
+
+We expect a positive relationship between the size of the wings and time spent aloft. In particular...
+
+We can use maths by including latex between dollar signs, for instance $\theta$.
+
+
+# Results
+
+Our results are summarized in @tbl-modelresults.
+
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+
+library(rstanarm)
+
+first_model <-
+  readRDS(file = here::here("models/first_model.rds"))
+```
+
+```{r}
+#| echo: false
+#| eval: true
+#| label: tbl-modelresults
+#| tbl-cap: "Explanatory models of flight time based on wing width and wing length"
+#| warning: false
+
+modelsummary::modelsummary(
+  list(
+    "First model" = first_model
+  ),
+  statistic = "mad",
+  fmt = 2
+)
+```
+
+
+
+
+# Discussion
+
+## First discussion point {#sec-first-point}
+
+If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
+数据分布不均
+
+## Second discussion point
+
+Please don't use these as sub-heading labels - change them to be what your point actually is.
+
+## Third discussion point
+
+## Weaknesses and next steps
+
+Weaknesses and next steps should also be included.
+
+\newpage
+
+\appendix
+
+# Appendix {-}
+
+
+# Additional data details
+
+# Model details {#sec-model-details}
+
+## Posterior predictive check
+
+In @fig-ppcheckandposteriorvsprior-1 we implement a posterior predictive check. This shows...
+
+In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. This shows... 
+
+```{r}
+#| eval: true
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-ppcheckandposteriorvsprior
+#| layout-ncol: 2
+#| fig-cap: "Examining how the model fits, and is affected by, the data"
+#| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
+
+pp_check(first_model) +
+  theme_classic() +
+  theme(legend.position = "bottom")
+
+posterior_vs_prior(first_model) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Set1") +
+  theme(legend.position = "bottom") +
+  coord_flip()
+```
+
+## Diagnostics
+
+@fig-stanareyouokay-1 is a trace plot. It shows... This suggests...
+
+@fig-stanareyouokay-2 is a Rhat plot. It shows... This suggests...
+
+```{r}
+#| echo: false
+#| eval: true
+#| message: false
+#| warning: false
+#| label: fig-stanareyouokay
+#| fig-cap: "Checking the convergence of the MCMC algorithm"
+#| fig-subcap: ["Trace plot", "Rhat plot"]
+#| layout-ncol: 2
+
+plot(first_model, "trace")
+
+plot(first_model, "rhat")
+```
+
+
+
+\newpage
+
+
+# References
