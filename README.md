@@ -11,31 +11,28 @@ How to build a reliable regression model to predict the price?
 ### Research objectives:
 The key factors affecting the price are analyzed by multivariate linear regression model.
 Evaluate the prediction performance and generalization ability of the model on the test set.
-
+### Estimand
 
 ## Data
 ### Data Tool: R packages that we use
 
-### Data Preparation
+### Data Preparation （appendix）
 #### Data cleaning
 Check the missing values, duplicate values and abnormal values in the data set and deal with them.
 Check whether the classification variables need to be re-coded (such as color, clarity, cutting code).
 Standardize numerical variables (such as carat weight and price) to eliminate scale influence.
 #### Data Split: 80:20
 
-### Exploratory data analysis(EDA)
-#### Univariate analysis:
+### Raw Data
+### Analysis Data
+### Univariate analysis:
 Use histogram and box chart to understand the distribution and abnormal values of variables.
-#### Bivariate analysis:
+### Bivariate analysis:
 Visualize the relationship between independent variables and price & the correlation between variables;
 Visualize the relationship between independent variables and price: scatter plot, add regression line; Box graph or histogram.
-Correlation between variables: calculate the correlation matrix between variables and identify potential multicollinearity.
-#### Data balance check:
-Check whether the classification variables (such as color, clarity and cut) are evenly distributed and whether there is category imbalance.
-#### Exploration of feature selection:
-Through the preliminary univariate regression, this paper analyzes which variables may most significantly affect the price.
+Correlation between variables: calculate the correlation matrix between variables and identify potential multicollinearity.VIF
 
-## Measurement???
+## Measurement: how to get the variables
 
 ## Model
 ### Assumptions of linear regression: 4 assumptions
@@ -53,7 +50,7 @@ If it is found that the goodness of fit of the initial linear model is not high
 ### Model Comparison: after comparing, we can get the final mode
 advantage ang disdavantage of each model ang why we choose final model
 
-### Model Evaluation(final model): 
+### Model Evaluation(final model):appendix 
 #### Diagonsis
 Residuals vs. Fitted Plot: Check the hypothesis that the mean of residuals is zero.
 Normal Q-Q Plot: Check whether the residual conforms to the normal distribution.
@@ -68,8 +65,7 @@ Residuals vs. Leverage Plot: Check abnormal values and high leverage points.
 1. State what are key variables
 2. Visualize the model
 3. Explain how does each variable affect response(coefficient) (model summary)
-
-。
+4. Example of Prediction
 
 
 ## Discussion
