@@ -55,7 +55,7 @@ model_lm <- readRDS(here("models/lm.rds"))
 mean_price <- mean(cleaned_data$price, na.rm = TRUE)
 # Create the histogram with mean line and density curve
 histogram_plot <- ggplot(cleaned_data, aes(x = price)) +
-  geom_histogram(binwidth = 500, fill = "pink", color = "black", alpha = 0.7) + 
+  geom_histogram(binwidth = 500, fill = "lightblue", color = "black", alpha = 0.7) + 
   geom_vline(xintercept = mean_price, linetype = "dashed", color = "salmon") + # Add a dashed vertical line for the mean
   labs(
     x = "Diamond Price",
@@ -66,7 +66,7 @@ histogram_plot <- ggplot(cleaned_data, aes(x = price)) +
 
 # Graph boxplot
 boxplot <- ggplot(cleaned_data, aes(x = "", y = price)) +
-  geom_boxplot(fill = "lightblue", color = "black", alpha = 0.7, outlier.colour = "salmon") +
+  geom_boxplot(fill = "pink", color = "black", alpha = 0.7, outlier.colour = "salmon") +
   labs(
     x = "",
     y = "Diamond Price"
@@ -94,7 +94,7 @@ combined_plot
 # Create the histogram with mean line and density curve
 
 color_histogram_plot <- ggplot(cleaned_data, aes(x = color)) +
-  geom_bar(binwidth = 3,fill = "lightblue", color = "black", alpha = 0.7) + 
+  geom_bar(binwidth = 3,fill = "pink", color = "black", alpha = 0.7) + 
   #scale_x_continuous(
   #  breaks = 1:8, 
   #  labels = c("D", "E", "F", "G", "H", "I", "J", "K"))+
@@ -104,22 +104,20 @@ color_histogram_plot <- ggplot(cleaned_data, aes(x = color)) +
     y = "Count") +
   theme_minimal() # Use a minimal theme for clean visualization
 
-
-plot_color <- ggplot(cleaned_data, aes(x = color, y = price,group = 1))+
-  geom_point(color = "pink", alpha = 0.7) + 
-  geom_smooth(method = "lm", color = "black", se = FALSE) + 
+# 绘制小提琴图
+violin_plot_color <- ggplot(cleaned_data, aes(x = color, y = price)) +
+  geom_violin(trim = FALSE, fill = "lightblue", alpha = 0.7) +  # 添加小提琴图
+  geom_boxplot(width = 0.2, outlier.color = "salmon", outlier.shape = 8, alpha = 0.7) +  # 在小提琴图中叠加箱线图
   labs(
-    title = "Color vs Price",
+    title = "Violin Plot of Price by Color",
     x = "Color",
-    y = "Diamond Price"
+    y = "Price"
   ) +
-  theme_minimal()
+  theme_minimal()  # 使用简洁的主题
 
-combined_plot <- color_histogram_plot | plot_color
+# Combine 2 plots
+combined_plot <- color_histogram_plot | violin_plot_color
 combined_plot
-
-
-
 ```
 
 
@@ -171,7 +169,7 @@ combined_plot
 # Graph histogram
 # Create the histogram with mean line
 clarity_histogram_plot <- ggplot(cleaned_data, aes(x = clarity)) +
-  geom_bar(bins = 20, fill = "lightblue", color = "black", alpha = 0.7) +
+  geom_bar(bins = 20, fill = "pink", color = "black", alpha = 0.7) +
   labs(
     title = "Distribution of Variable: Clarity",
     x = "Diamond Clarity",
@@ -180,20 +178,20 @@ clarity_histogram_plot <- ggplot(cleaned_data, aes(x = clarity)) +
   theme_minimal() + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-plot_clarity <- ggplot(cleaned_data, aes(x = clarity, y = price, group=1)) +
-  geom_point(color = "pink", alpha = 0.7) +
-  geom_smooth(method = "loess", color = "black", se = FALSE) +
+
+
+boxplot_plot_clarity <- ggplot(cleaned_data, aes(x = clarity, y = price)) +
+  geom_boxplot(fill = "lightblue",outlier.color = "salmon", outlier.shape = 8, alpha = 0.7) +
   labs(
-    title = "Clarity vs Price",
-    x = "Clarity",
-    y = "Diamond Price"
+    title = "Boxplot of Price by Clarity",
+    x = "Cut",
+    y = "Price"
   ) +
-  theme_minimal()+ 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme_minimal() 
 
 
 # Combine 2 plots
-combined_plot <- clarity_histogram_plot | plot_clarity
+combined_plot <- clarity_histogram_plot | boxplot_plot_clarity
 combined_plot
 
 
@@ -207,7 +205,7 @@ combined_plot
 
 # Graph histogram
 # Create the histogram with mean line
-clarity_histogram_plot <- ggplot(cleaned_data, aes(x = cut)) +
+cut_histogram_plot <- ggplot(cleaned_data, aes(x = cut)) +
   geom_bar(bins = 20, fill = "palevioletred", color = "black", alpha = 0.7)+
   labs(
     title = "Distribution of Variable: Cut",
@@ -217,19 +215,19 @@ clarity_histogram_plot <- ggplot(cleaned_data, aes(x = cut)) +
   theme_minimal() # Use a minimal theme for clean visualization
 
 
-plot_cut <- ggplot(cleaned_data, aes(x = cut, y = price,group=1)) +
-  geom_point(color = "lightblue", alpha = 0.7) +
-  geom_smooth(method = "loess", color = "black", se = FALSE) +
+violin_plot_cut <- ggplot(cleaned_data, aes(x = cut, y = price)) +
+  geom_violin(trim = FALSE, fill = "lightblue", alpha = 0.7) + 
+  geom_boxplot(width = 0.2, outlier.cut = "salmon", outlier.shape = 8, alpha = 0.7) +
   labs(
-    title = "Cut vs Price",
+    title = "Violin Plot of Price by Cut",
     x = "Cut",
-    y = "Diamond Price"
+    y = "Price"
   ) +
-  theme_minimal()
+  theme_minimal() 
 
 
 # Combine 2 plots
-combined_plot <- clarity_histogram_plot | plot_cut
+combined_plot <- cut_histogram_plot | violin_plot_cut
 combined_plot
 
 
