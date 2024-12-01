@@ -23,6 +23,7 @@ library(arrow)
 library(here)
 library(ggplot2)
 library(patchwork)
+library(ggplot2)
 
 raw_data <- read_delim(here("data/01-raw_data/diamondprice.txt"), delim = "\t")
 cleaned_data <- read_parquet(here("data/02-analysis_data/cleaned_diamondprice.parquet"))
@@ -235,36 +236,28 @@ combined_plot
 ```
 
 
-
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
-#| label: fig-correlation
-#| fig-cap: "Correlation"
+#| label: fig-correlation_heat
+#| fig-cap: "Correlation: Heat Graph"
 
-#mosaic plot
-library(vcd)
-table_data <- xtabs(~ cut + clarity + color, data = cleaned_data)
+# 按 cut, color, 和 clarity 聚合 carat_size 的均值
+agg_data <- aggregate(carat_size ~ cut + color + clarity, data = cleaned_data, FUN = mean)
 
-highlighting_colors <- grDevices::rainbow(8, alpha = 0.5)  # alpha 
-options(repr.plot.width = 12, repr.plot.height = 12)  # 宽度和高度可根据需要调整
+#agg_data <- aggregate(carat_size ~ cut + color + clarity, data = #cleaned_data, FUN = median)
 
-mosaic(~ cut + clarity + color, data = table_data,
-       highlighting = "color",                      # 设置高亮变量为 color
-       highlighting_fill = highlighting_colors,    # 使用生成的浅色彩虹
-       direction = c("h", "v", "h"), # 控制变量的排列方向
-       main = "Relationship Between Cut, Clarity, and Color")
+# 绘制分面热图
+ggplot(agg_data, aes(x = cut, y = color, fill = carat_size)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "pink") +
+  facet_wrap(~ clarity) + # 按 clarity 分面
+  labs(title = "Heatmap of Carat Size by Cut, Color, and Clarity",
+       x = "Cut", y = "Color", fill = "Mean Carat Size") +
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))+
+  theme(axis.text.y = element_text(size = 6))
 
 
 ```
-
-
-
-
-
-## Data Cleaning {#sec-datacleaning}
-
-
-
-### Data Split
 
 
 
@@ -274,28 +267,53 @@ The goal of our modelling strategy is twofold. Firstly,...
 
 Here we briefly describe the Bayesian analysis model used to investigate... Background details and diagnostics are included in [Appendix -@sec-model-details].
 
+## Data preparation
+包括如何处理reponse来符合gamma。详细请见appendix
+
+
 ## Model set-up
 
-Define $y_i$ as the number of seconds that the plane remained aloft. Then $\beta_i$ is the wing width and $\gamma_i$ is the wing length, both measured in millimeters.  
+
+
+Define \( y_i \) as the price of the \( i \)-th diamond. Predictors include:
 
 \begin{align} 
-y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma) \\
-\mu_i &= \alpha + \beta_i + \gamma_i\\
-\alpha &\sim \mbox{Normal}(0, 2.5) \\
-\beta &\sim \mbox{Normal}(0, 2.5) \\
-\gamma &\sim \mbox{Normal}(0, 2.5) \\
-\sigma &\sim \mbox{Exponential}(1)
+- \( x_{1i} \): The carat size of the diamond (in carats).
+- \( x_{2i} \): The color grade of the diamond (categorical).
+- \( x_{3i} \): The cut grade of the diamond (categorical).
+- \( x_{4i} \): The clarity grade of the diamond (categorical).
+
+**Model Structure**:
+1. **Response Distribution**:  
+   \( y_i \mid \mu_i, \phi \sim \text{Gamma}(\mu_i, \phi) \),  
+   where \( \mu_i \) is the mean price and \( \phi \) is the dispersion parameter.
+
+2. **Link Function**:  
+   \( \log(\mu_i) = \beta_0 + \beta_1 x_{1i} + \sum_{j} \beta_{2j} \cdot \text{color}_{ij} + \sum_{k} \beta_{3k} \cdot \text{cut}_{ik} + \sum_{l} \beta_{4l} \cdot \text{clarity}_{il} \).
+
+   - \( \beta_0 \): Intercept term.  
+   - \( \beta_1 \): Effect of carat size.  
+   - \( \beta_{2j}, \beta_{3k}, \beta_{4l} \): Effects of color, cut, and clarity, respectively.
+
+3. **Mean Price**:  
+   \( \mu_i = \exp(\beta_0 + \beta_1 x_{1i} + \sum_{j} \beta_{2j} \cdot \text{color}_{ij} + \sum_{k} \beta_{3k} \cdot \text{cut}_{ik} + \sum_{l} \beta_{4l} \cdot \text{clarity}_{il}) \).
+
+
 \end{align}
 
-We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
 
 
-### Model justification
-
+## Model justification
+以及为什么选择gamma，因为data section 里reponse符合分布
 We expect a positive relationship between the size of the wings and time spent aloft. In particular...
 
 We can use maths by including latex between dollar signs, for instance $\theta$.
 
+
+## Model Comparision: Generalized Linear Model vs. Linear Model
+
+## Model Evaluation
+See appendix
 
 # Results
 
@@ -304,30 +322,48 @@ Our results are summarized in @tbl-modelresults.
 ```{r}
 #| echo: false
 #| eval: true
-#| warning: false
-#| message: false
-
-library(rstanarm)
-
-first_model <-
-  readRDS(file = here::here("models/first_model.rds"))
-```
-
-```{r}
-#| echo: false
-#| eval: true
 #| label: tbl-modelresults
-#| tbl-cap: "Explanatory models of flight time based on wing width and wing length"
+#| tbl-cap: "Explanatory models of Diamond Price based on Color, Cut, Clarity and Carat Size"
 #| warning: false
 
-modelsummary::modelsummary(
-  list(
-    "First model" = first_model
-  ),
-  statistic = "mad",
-  fmt = 2
-)
+summary(model_glm)
 ```
+
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-prediction_actual
+#| fig-cap: "Actual vs Predicted Values"
+
+test_data$price <- scale(test_data$price, center = TRUE, scale = TRUE)
+test_data$price<-exp(test_data$price)
+test_data$color <- factor(test_data$color)
+test_data$cut <- factor(test_data$cut)
+test_data$clarity <- factor(test_data$clarity)
+
+test_data$predicted_price <- predict(model_glm, newdata = test_data, type = "response")
+
+ggplot(data = test_data, aes(x = 1:nrow(test_data))) +
+  geom_line(aes(y = predicted_price), color = "lightblue", size = 1, linetype = "solid") + 
+  geom_point(aes(y = price), color = "palevioletred", size = 2) + 
+  labs(
+    x = "Index",
+    y = "Price"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+
+```
+
+
+## Model Formula
+
+
+
+## Example of Prediction
+
+
 
 
 
@@ -337,17 +373,20 @@ modelsummary::modelsummary(
 ## First discussion point {#sec-first-point}
 
 If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
-数据分布不均
+
 
 ## Second discussion point
 
 Please don't use these as sub-heading labels - change them to be what your point actually is.
 
-## Third discussion point
+## Limitations
+### Data Limitations
+数据分布不均
+### Model Limitations
 
-## Weaknesses and next steps
 
-Weaknesses and next steps should also be included.
+## Further Considerations
+
 
 \newpage
 
@@ -356,9 +395,38 @@ Weaknesses and next steps should also be included.
 # Appendix {-}
 
 
-# Additional data details
+# Additional data details {#sec-data-details}
+
+## Data Summary
+data section
+```{r}
+#| echo: false
+#| eval: true
+#| label: tbl-cleaned data
+#| tbl-cap: "First 8 rows of Cleaned data"
+#| warning: false
+
+head_cleaned_data <- head(cleaned_data,8)
+knitr::kable(head_cleaned_data, format = "simple", col.names = c('Diamond Price','Carat Size','Color', 'Clarity','Cut'))
+
+
+```
+
+
+## Data Cleaning
+data section
+## Data Preparation and Data Split
+Model Section
+
+response variable
+train test to fit the mode
+
 
 # Model details {#sec-model-details}
+
+
+## Model Evaluation
+
 
 ## Posterior predictive check
 
@@ -376,7 +444,7 @@ In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. Th
 #| fig-cap: "Examining how the model fits, and is affected by, the data"
 #| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
 
-pp_check(first_model) +
+pp_check(model_glm) +
   theme_classic() +
   theme(legend.position = "bottom")
 
