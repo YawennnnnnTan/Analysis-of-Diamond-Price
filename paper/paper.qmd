@@ -180,18 +180,21 @@ clarity_histogram_plot <- ggplot(cleaned_data, aes(x = clarity)) +
 
 
 
-boxplot_plot_clarity <- ggplot(cleaned_data, aes(x = clarity, y = price)) +
-  geom_boxplot(fill = "lightblue",outlier.color = "salmon", outlier.shape = 8, alpha = 0.7) +
+violin_plot_clarity <- ggplot(cleaned_data, aes(x = clarity, y = price)) +
+  geom_violin(trim = FALSE, fill = "lightblue", alpha = 0.7) + 
+  geom_boxplot(width = 0.2, outlier.color = "salmon", outlier.shape = 8, alpha = 0.7) +
   labs(
-    title = "Boxplot of Price by Clarity",
-    x = "Cut",
+    title = "Violin Plot of Price by Clarity",
+    x = "Clarity",
     y = "Price"
   ) +
   theme_minimal() 
 
 
+
+
 # Combine 2 plots
-combined_plot <- clarity_histogram_plot | boxplot_plot_clarity
+combined_plot <- clarity_histogram_plot | violin_plot_clarity
 combined_plot
 
 
@@ -217,7 +220,7 @@ cut_histogram_plot <- ggplot(cleaned_data, aes(x = cut)) +
 
 violin_plot_cut <- ggplot(cleaned_data, aes(x = cut, y = price)) +
   geom_violin(trim = FALSE, fill = "lightblue", alpha = 0.7) + 
-  geom_boxplot(width = 0.2, outlier.cut = "salmon", outlier.shape = 8, alpha = 0.7) +
+  geom_boxplot(width = 0.2, outlier.color = "salmon", outlier.shape = 8, alpha = 0.7) +
   labs(
     title = "Violin Plot of Price by Cut",
     x = "Cut",
@@ -256,6 +259,19 @@ ggplot(agg_data, aes(x = cut, y = color, fill = carat_size)) +
 
 
 ```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-correlation_heat
+#| fig-cap: "Correlation: Heat Graph"
+
+
+
+
+```
+
+
+
+
 
 
 
