@@ -9,43 +9,28 @@
 
 
 #### Workspace setup ####
-library(tidyverse)
-set.seed(853)
+library(readr)
+library(arrow)
+set.seed(141)
 
 
 #### Simulate data ####
-# State names
-states <- c(
-  "New South Wales",
-  "Victoria",
-  "Queensland",
-  "South Australia",
-  "Western Australia",
-  "Tasmania",
-  "Northern Territory",
-  "Australian Capital Territory"
-)
 
-# Political parties
-parties <- c("Labor", "Liberal", "Greens", "National", "Other")
+# Dataset size
+n <- 141
 
-# Create a dataset by randomly assigning states and parties to divisions
-analysis_data <- tibble(
-  division = paste("Division", 1:151),  # Add "Division" to make it a character
-  state = sample(
-    states,
-    size = 151,
-    replace = TRUE,
-    prob = c(0.25, 0.25, 0.15, 0.1, 0.1, 0.1, 0.025, 0.025) # Rough state population distribution
-  ),
-  party = sample(
-    parties,
-    size = 151,
-    replace = TRUE,
-    prob = c(0.40, 0.40, 0.05, 0.1, 0.05) # Rough party distribution
-  )
+# Generate simulated data
+simulated_data <- data.frame(
+  price = sample(1000:10000, n, replace = TRUE), # Price range: 1000-10000 as integers
+  color = sample(c('D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'), n, replace = TRUE), # Color categories
+  cut = sample(c('Ideal', 'Good', 'Very Good', 'Excellent'), n, replace = TRUE), # Cut categories
+  clarity = sample(c('IF', 'VVS1', 'VVS2', 'VS1', 'VS2', 'SI1', 'SI2'), n, replace = TRUE), # Clarity categories
+  carat_size = runif(n, min = 0.2, max = 5.0) # Carat size range: 0.2-5.0
 )
 
 
 #### Save data ####
-write_csv(analysis_data, "data/00-simulated_data/simulated_data.csv")
+write_csv(simulated_data, "data/00-simulated_data/simulated_diamondprice.csv")
+write_parquet(simulated_data, "data/00-simulated_data/simulated_diamondprice.parquet")
+
+
