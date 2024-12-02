@@ -1,10 +1,12 @@
 #### Preamble ####
 # Purpose: Cleans the raw data
 # Author: Yawen Tan
-# Date: 28 November 2024
+# Date: 01 December 2024
 # Contact: yawen,tan@mail.utoronto.ca
 # License: MIT
-# Pre-requisites: None
+# Pre-requisites: 
+# - The `readr`,`arrow`,`caTools`,`dplyr` package must be installed and loaded
+# - 02-download_data.R must have been run
 
 #### Workspace setup ####
 library(readr)

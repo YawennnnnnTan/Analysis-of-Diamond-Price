@@ -4,9 +4,8 @@
 # Date: 30 November 2024
 # Contact: yawen.tan@mail.utoronto.ca
 # License: MIT
-# Pre-requisites: The `tidyverse` package must be installed
-# Any other information needed? Make sure you are in the `starter_folder` rproj
-
+# Pre-requisites: 
+# - The `readr`,`arrow` package must be installed and loaded
 
 #### Workspace setup ####
 library(readr)
