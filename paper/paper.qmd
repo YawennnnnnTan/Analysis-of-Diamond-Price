@@ -51,7 +51,7 @@ model_lm <- readRDS(here("models/lm.rds"))
 
 The data set has 2690 data and 5 variables. Variables include response variable diamond price, predictor variables Diamond Color, Diamond Carat Size, Diamond Clarity, Diamond Cut. @tbl-dataset summarizes the range, variable type and examples of each variable. The detailed description of each variables will be presented in outcome variable and predictor variables section.
 
-We use the statistical programming language R [@citeR].... Our data [@shelter].... Following @tellingstories, we consider...
+We use the statistical programming language R [@citeR].... Our data [@diamonds_data].... Following @tellingstories, we consider...
 
 
 ```{r}
@@ -156,6 +156,7 @@ combined_plot
 ### Color{#sec-color}
 
 The diamond color, a categorical variable, represents the degree of colorlessness of a diamond. It has seven categories in the dataset, ranging from the letter D (completely colorless) to the letter K (faint yellow or brown tint), based on the GIA (Gemological Institute of America) grading system.
+
 -   D is the highest grade, completely colorless and the rarest and most expensive color in diamonds. 
 -   E and F grades are almost colorless, and extremely weak tones can only be detected under professional instruments. 
 -   G and H grades still look almost colorless, and only when compared with higher grades in bright light can a slight yellow or brown tone be observed. 
