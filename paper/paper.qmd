@@ -28,6 +28,7 @@ library(patchwork)
 library(ggplot2)
 library(ggcorrplot)
 library(dplyr)
+library(knitr)
 
 raw_data <- read_delim(here("data/01-raw_data/diamondprice.txt"), delim = "\t")
 cleaned_data <- read_parquet(here("data/02-analysis_data/cleaned_diamondprice.parquet"))
@@ -42,21 +43,25 @@ model_lm <- readRDS(here("models/lm.rds"))
 
 # Introduction 
 
+钻石质量的 4C标准，即评判钻石的通用标准：颜色、切割、净度和克拉重量。
 
 # Data {#sec-data}
 
+## Overview {#sec-overview}
 
-## Data Overview
-The data set has 2690 data and 5 variables. Variables include response variable diamond price, predictor variables Diamond Color, Diamond Carat Size, Diamond Clarity, Diamond Cut.@tbl-data summarizes the range, variable type and examples of each variable.
-更详细的请见:
+The data set has 2690 data and 5 variables. Variables include response variable diamond price, predictor variables Diamond Color, Diamond Carat Size, Diamond Clarity, Diamond Cut. @tbl-dataset summarizes the range, variable type and examples of each variable. The detailed description of each variables will be presented in outcome variable and predictor variables section.
 
 We use the statistical programming language R [@citeR].... Our data [@shelter].... Following @tellingstories, we consider...
+
+## Measurement {#sec-measurement}
+钻石颜色等数据是如何得出的
+然后提到数据集是如何得出的
 
 
 ```{r}
 #| echo: false
 #| eval: true
-#| label: tbl-data
+#| label: tbl-dataset
 #| tbl-cap: "Summary of Diamond Dataset"
 #| warning: false
 
@@ -72,10 +77,10 @@ summary_table <- data.frame(
   ),
   Range_or_Levels = c(
     "1000 to 10,000 (USD)", 
-    "D to K (D: Worest, K: Best)", 
+    "D to K (D: Best, K: Worst)", 
     "0.30 to 2.02", 
     "SI2, SI1, VS2, VS1, VVS2, VVS1, IF (Low to High)", 
-    "Ideal, Good, Very Good, Excellent (Worst to Best)"
+    "Good, Very Good, Excellent, Ideal (Worst to Best)"
   ),
   Data_Type = c(
     "Numeric", 
@@ -101,13 +106,16 @@ knitr::kable(
 
 ```
 
-## Outcome Variable
+## Outcome Variable {#sec-outcomevar}
 
 The diamond price is a continuous numerical variable, ranging from close to 1000 USD to 10,000 USD. Through the histogram of @fig-price, we can find that the price of diamonds has obvious right skewness, and with the increase of price, the number of diamonds decreases gradually. In addition, combining the histogram and box chart in @fig-price, we can find that there is no obvious abnormal value of diamond prices. Most diamond prices are concentrated in the range of 2,500 USD to 5,000 USD, with an average price of about 4,000 USD and a median of 3,500 USD, indicating that a few high-priced diamonds have raised the overall average.
+
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 #| label: fig-price
 #| fig-cap: "Graphs of Diamond price"
+#| warning: false
+
 
 # Graph histogram
 # Calculate the mean of diamond prices
@@ -140,14 +148,22 @@ combined_plot
 
 
 
-## Predictor Variables
-在appendix里面加入一个关于所有变量的table，然后在这里引用，说明变量类型什么的
-解释每个变量：含义是什么，包括什么值，如何排序
+## Predictor Variables {#sec-predictorvar}
 
-### Color
-def:
-distribution:
-vs price:
+### Color{#sec-color}
+
+The diamond color, a categorical variable, represents the degree of colorlessness of a diamond. It has seven categories in the dataset, ranging from the letter D (completely colorless) to the letter K (faint yellow or brown tint), based on the GIA (Gemological Institute of America) grading system.
+-   D is the highest grade, completely colorless and the rarest and most expensive color in diamonds. 
+-   E and F grades are almost colorless, and extremely weak tones can only be detected under professional instruments. 
+-   G and H grades still look almost colorless, and only when compared with higher grades in bright light can a slight yellow or brown tone be observed. 
+-   I and J began to show slightly yellow tint visible, especially in larger diamonds. 
+-   K shows obvious yellow tone or brown tone.
+
+The barplot on the left of @fig-color shows the distribution of diamond color from D to K. The barplot shows that the number of diamonds with color grades E and F is the largest, indicating that these nearly colorless diamonds are more popular in the market, probably because they have high quality and cost performance. In contrast, the number of completely colorless D-class diamonds and K-class diamonds with slight yellow is small, which may be due to their rarity and color deviation, respectively, resulting in low demand. This picture directly reflects the supply of diamonds of different color grades in the market and their potential demand trends.
+The violin chart on the right of @fig-color shows the distribution of diamond prices in different color grades. The violio chart shows that the prices of diamonds with color grades D to F are generally higher, especially those with color grades D and E, which shows a wider price distribution range, indicating that the prices of high-end diamonds with these color grades can increase significantly. In contrast, the price distribution of diamonds with color grades I to K is more concentrated and the overall price is lower, reflecting that the price fluctuation of diamonds close to yellow is less in the market. In addition, there are significant outliers in top colors such as D and E, which may be due to the unusually high price of diamonds with large carats or other high-quality characteristics. This figure clearly reveals the influence of color grade on price and its market value distribution characteristics.
+
+
+
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 #| label: fig-color
@@ -184,7 +200,11 @@ combined_plot <- color_histogram_plot | violin_plot_color
 combined_plot
 ```
 
-### Carat Size
+### Carat Size{#sec-caratsize}
+
+The diamond carat size, a continuous numerical variable representing the weight of the diamond, ranges from approximately 0.30 to 2.02 carats in the dataset. One carat is equivalent to 200 milligrams, making it a key factor in determining the diamond's size and price.
+The histogram on the left of @fig-carat_size shows the distribution of the Carat Size of diamonds. On the whole, it presents a right-skewed distribution, indicating that the number of small carats (such as 0.5 to 1.0 carats) is the largest in the market, while the number of larger carats is gradually decreasing. The red dotted line in the figure indicates the average carat size, and it can be seen that the carat size of most diamonds is concentrated on the left side of the average, which further reflects the dominant position of small carat diamonds in the market. This reflects that consumers have higher demand for small carats, while large carats are scarce because of their rarity and high price.
+The scatter chart on the right of @fig-carat_size shows the relationship between the carat size of diamonds and the price. It can be clearly seen that the price rises rapidly with the increase of carat size, showing a nonlinear growth trend. Especially in the range of close to 1.0 carats and larger carats, the price increase is more significant. This shows that the carat size has an important influence on the diamond price, but when the Dancla size exceeds a certain value (such as 1.5 carats), the price growth rate tends to be flat. In addition, the fitted black curve further clearly shows this nonlinear relationship, indicating that the marginal effect of carat size on price decreases.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 #| label: fig-carat_size
@@ -228,7 +248,18 @@ combined_plot
 ```
 
 
-### Clarity
+### Clarity{#sec-clarity}
+
+The diamond clarity, representing the number, size, location, and visibility of internal inclusions and external blemishes in a diamond, is a categorical variable with seven categories in the dataset: IF, VVS1, VVS2, VS1, VS2, SI1, and SI2. According to the GIA grading system, diamond clarity decreases progressively from IF (Internally Flawless) to SI (Slightly Included).
+ 
+-   Internally Flawless (IF) diamonds are characterized by having no visible inclusions under 10x magnification, which is nearly flawless. The only possible imperfections might be extremely fine surface blemishes, such as polishing marks, which can typically be removed with re-polishing. 
+-   Very Very Slightly Included (VVS) diamonds are divided into two subgrades: VVS1 and VVS2. VVS1 diamonds have extremely small inclusions that are barely detectable under 10x magnification, typically located at the pavilion (the bottom part of the diamond). VVS2 diamonds may have slightly more inclusions, such as tiny feather-like marks or minute blemishes, but these still require professional tools to identify.
+-   Very Slightly Included (VS) diamonds are classified into two subgrades: VS1 and VS2. VS1 diamonds have very small inclusions that are detectable under 10x magnification but careful observation to identify. VS2 diamonds contain relatively minor inclusions such as small feather-like marks or pinpoints, have more noticeable imperfections under magnification, but these imperfections have minimal impact on the diamond's overall appearance. 
+-   Slightly Included (SI) diamonds are categorized into two subgrades: SI1 and SI2. SI1 diamonds have inclusions that are more noticeable under 10x magnification and can be easily detected using professional tools. SI2 diamonds contain more inclusions, which are larger or more prominent, but these imperfections are typically not visible to the naked eye in most conditions. 
+
+The barplot on the left of @fig-clarity shows the distribution of diamond Clarity. It shows that the number of diamonds with clarity grades SI1 and SI2 is the largest, indicating that these grades of diamonds are the most widely available in the market, probably because they have higher cost performance and greater market demand. In contrast, the number of diamonds with clarity grade of IF(Internally Flawless) is the least, which reflects the rarity of completely flawless diamonds. This shows that diamonds with lower definition grades (such as SI1 and SI2) are the main ones in the market, while high definition diamonds are scarce.
+The violin chart on the right of @fig-clarity shows the distribution of diamond prices at different clarity levels. With the improvement of clarity, the price rises significantly, especially for diamonds with high definition such as IF and VVS1. The price distribution is wider and there are obvious outliers, which may be caused by the carat size or other quality characteristics of these diamonds. On the other hand, the price distribution of grades with low definition (such as SI1 and SI2) is relatively concentrated, and the median is obviously lower than that of high-grade diamonds, but their price range shows their stable demand and high cost performance in the market.
+
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 #| label: fig-clarity
@@ -271,7 +302,17 @@ combined_plot
 
 ```
 
-### Cut
+### Cut{#sec-cut}
+
+The diamond Cut measures the quality of diamond cutting, which determines how a diamond reflects light, thus affecting its brightness, fire and scintillation.The diamond cut in the data set is a categorical variable with four categories: Excellent, Very Good, Good, and Ideal. According to the grading systems of GIA and AGS, cut quality decreases from Ideal to Good.
+
+-   The Ideal cut with nearly all incoming light reflecting through the diamond's top to maximize brilliance and sparkle. It features balanced and prominent fire and scintillation, with precisely cut crown and pavilion angles to achieve optimal light refraction. Proportional standards, such as table percentage and pavilion depth percentage, meet ideal criteria. The facets are perfectly aligned with no visible deviations, and the surface is finely polished, free from any scratches or blemishes.
+-   Excellent cut diamonds reflect nearly all light through the top, showcasing maximum brilliance and fire. As the high cut grade, they exhibit optimal optical performance and exceptional visual appeal.
+-   Very Good cut diamonds reflect most of the light through the top, though a small amount may escape from the sides or bottom and their brilliance and fire are slightly less than those of Excellent cut diamonds.
+-   Good cut diamonds exhibit noticeably reduced light refraction, with some light escaping from the sides or bottom and their brilliance and fire are not as strong as higher-grade cuts.
+
+The barplot on the left of @fig-cut shows the distribution of diamonds with different cutting grades. It indicates that the number of diamonds with Excellent and Very Good grades is obviously more, indicating that most diamonds on the market are concentrated in these high-cut grades, which may be because they have better visual effects and higher market demand. In contrast, the number of Good and Ideal diamonds is small, especially the rarity of Ideal cutting may reflect strict cutting ratio requirements and high quality standards.
+The violin chart on the right of @fig-cut shows the price distribution of diamonds with different cutting grades. It shows the price range of each cutting grade is very close to the median, which shows that the cutting grade has little direct influence on the price. However, Ideal and Excellent diamonds are more obviously distributed in the high-end price range, which may be because these two grades of diamonds are usually combined with other high-quality characteristics, such as high carat number or clarity. At the same time, the overall price range is relatively large, indicating that other factors (such as carats, colors, etc.) may play a more important role in determining the price.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 #| label: fig-cut
@@ -310,12 +351,17 @@ combined_plot
 
 ```
 
+## Analysis of Correlation{#sec-correlation}
+
+@fig-correlation_heat shows several key insights about the relationships between diamond attributes and price. Carat size shows a strong positive correlation with price, indicating that it is one of the primary factors influencing diamond value—larger diamonds tend to be more expensive. In contrast, cut (e.g., cutExcellent, cutVery Good) demonstrates a weaker correlation with price, suggesting that cut grade alone has a limited direct impact on diamond cost but may work in conjunction with other factors such as carat size or color. Similarly, color (e.g., colorD to colorK) shows a weak correlation with price, with diamonds closer to colorless (e.g., colorD and colorE) potentially commanding higher prices, but the overall effect is minimal. Clarity (e.g., clarityIF to claritySI2) also exhibit a modest relationship with price, reflecting their role as a contributing but less dominant factor in determining diamond value. Overall, carat size emerges as the most influential attribute, while other variables like cut, color, and clarity play supporting roles.
+@fig-correlation_heat also presents the relationships between the predictor variables, showing that the correlations among them are generally weak. For example, attributes like cut quality, clarity, color, and carat size do not exhibit strong intercorrelations, as most of the corresponding cells are closer to white or light blue. This suggests that the predictor variables are relatively independent, reducing the risk of multicollinearity in the analysis. The weak correlations among these variables ensure that each contributes uniquely to the model, providing a robust foundation for predicting diamond price.
+
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 #| label: fig-correlation_heat
 #| fig-cap: "Correlation: Heat Graph"
 
-# Step 1: 创建一个包含独热编码的新的数据集
+
 correlated_data <- cleaned_data %>%
   mutate(
     color = factor(color, levels = c("D", "E", "F", "G", "H", "I", "J", "K")),
@@ -323,11 +369,9 @@ correlated_data <- cleaned_data %>%
     cut = factor(cut, levels = c("Ideal", "Good", "Very Good", "Excellent"))
   )
 
-# 使用 model.matrix 进行独热编码
 
-options(contrasts = c("contr.treatment", "contr.poly")) # 默认对比方法
+options(contrasts = c("contr.treatment", "contr.poly"))
 
-# 强制生成所有列
 one_hot_encoded <- cbind(
   correlated_data %>% select(price, carat_size), # 数值变量
   model.matrix(~ color + clarity + cut - 1, data = correlated_data, 
@@ -338,10 +382,10 @@ one_hot_encoded <- cbind(
                ))
 )
 
-# Step 2: 计算相关矩阵
+
 cor_matrix <- cor(one_hot_encoded, use = "complete.obs")
 
-# Step 3: 自定义列和行的顺序
+
 custom_order <- c(
   "price", 
   paste0("color", c("D", "E", "F", "G", "H", "I", "J", "K")), # Color levels
@@ -351,43 +395,34 @@ custom_order <- c(
 )
 
 
-# 确保 custom_order 中的变量名存在于 cor_matrix 中
 valid_order <- intersect(custom_order, rownames(cor_matrix))
 
-# 重新排序矩阵的行和列
+
 cor_matrix <- cor_matrix[valid_order, valid_order]
 
-# Step 4: 绘制相关矩阵热图
+
 ggcorrplot(
   cor_matrix, 
-  lab = FALSE,                 # 不显示相关系数的数值
-  hc.order = FALSE,            # 禁用层次聚类，保持指定顺序
-  type = "lower",              # 显示下三角
-  lab_size = 3,                # 数值字体大小
-  colors = c("lightblue", "white", "palevioletred"), # 热图颜色
-  tl.cex = 8                   # 标签字体大小
+  lab = FALSE,             
+  hc.order = FALSE,        
+  type = "lower",       
+  lab_size = 3,               
+  colors = c("lightblue", "white", "palevioletred"),
+  tl.cex = 8                  
 )
 
 
 ```
 
 
-
-
-## Measurement 
-钻石颜色等数据是如何得出的
-然后提到数据集是如何得出的
-
-
-# Model
+# Model{#sec-model}
 
 
 ## Data preparation
 包括如何处理reponse来符合gamma。详细请见appendix
 
 
-## Model set-up
-
+## Model set-up{#sec-modelsetup}
 
 
 Define \( y_i \) as the price of the \( i \)-th diamond. Predictors include:
@@ -427,34 +462,56 @@ Define \( y_i \) as the price of the \( i \)-th diamond. Predictors include:
 
 
 
-
-## Model justification
-以及为什么选择gamma，因为data section 里reponse符合分布
+## Model justification{#sec-justification}
+为什么选择glm，以及为什么选择gamma，因为data section 里reponse符合分布
 We expect a positive relationship between the size of the wings and time spent aloft. In particular...
 
 We can use maths by including latex between dollar signs, for instance $\theta$.
 
 
-## Model Comparision: Generalized Linear Model vs. Linear Model
+## Model Comparision: Generalized Linear Model vs. Linear Model {#sec-compare}
+```{r}
+#| echo: false
+#| eval: true
+#| label: tbl-modelcompare
+#| tbl-cap: "Model Reulst: Prediction of Diamond Price based on Color, Cut, Clarity and Carat Size"
+#| warning: false
+aic_value <- AIC(model_glm)
+bic_value <- BIC(model_glm)
 
-## Model Evaluation
+cat("AIC:", aic_value, "\n")
+cat("BIC:", bic_value, "\n")
+```
+
+## Model Evaluation{#sec-evaluation}
 See appendix
 
-# Results
-
-
+# Results{#sec-result}
+## Model Result{#sec-modelresult}
 
 ```{r}
 #| echo: false
 #| eval: true
 #| label: tbl-modelresults
-#| tbl-cap: "Explanatory models of Diamond Price based on Color, Cut, Clarity and Carat Size"
+#| tbl-cap: "Model Reulst: Prediction of Diamond Price based on Color, Cut, Clarity and Carat Size"
 #| warning: false
 
+# 获取 model_glm 的系数摘要
+model_summary <- summary(model_glm)$coefficients
+
+# 将摘要转换为数据框，便于 knitr::kable 格式化
+model_summary_df <- as.data.frame(model_summary)
 summary(model_glm)
+# 使用 knitr::kable 输出表格
+knitr::kable(
+  model_summary_df,
+  digits = 3,  # 设置小数点后保留 3 位
+  format = "pipe"  # 输出格式，可选 "html", "latex", "pipe" 等
+)
 ```
 
 
+## Predictions vs Actual Value{#sec-predictions}
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 #| label: fig-prediction_actual
@@ -482,35 +539,26 @@ ggplot(data = test_data, aes(x = 1:nrow(test_data))) +
 ```
 
 
-## Model Formula
-
-
-
-## Example of Prediction
+## Example of Prediction{#sec-example}
 
 
 
 
 
 
-# Discussion
+# Discussion{#sec-discussion}
 
 ## First discussion point {#sec-first-point}
 
 If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
 
-
-## Second discussion point
-
-Please don't use these as sub-heading labels - change them to be what your point actually is.
-
-## Limitations
-### Data Limitations
+## Limitations{#sec-limitation}
+### Data Limitations{#sec-datalimit}
 数据分布不均
-### Model Limitations
+### Model Limitations{#sec-modellimit}
 
 
-## Further Considerations
+## Further Considerations{#sec-further}
 
 
 \newpage
@@ -520,45 +568,108 @@ Please don't use these as sub-heading labels - change them to be what your point
 # Appendix {-}
 
 
-# Additional data details {#sec-data-details}
+# Additional data details {#sec-addtionaldata}
 
-## Data Summary
+## Data Cleaning{#sec-dataclean}
 data section
-
-Variable type
-
-## Data Cleaning
-data section
-## Data Preparation and Data Split
+## Data Preparation and Data Split{#sec-dataprepare}
 Model Section
 
 response variable
 train test to fit the mode
 
 
-# Model details {#sec-model-details}
+# Additional Model details {#sec-model-details}
 
 
-## Model Evaluation
+## Evaluation Metrics and Diagnostic Table{#sec-evaluation}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-evaluation
+#| fig-cap: "Actual vs Predicted Values"
+
+# 加载必要的库
+library(knitr)
+
+# 假设 `model_glm` 是基于 `train_data` 构建的模型
+# 假设 `test_data` 是用于测试的独立数据集
+
+# 1. 使用 test_data 计算 MSE 和 MAE
+predicted_test <- predict(model_glm, newdata = test_data, type = "response")
+actual_test <- test_data$price  # 假设价格列为 'price'
+
+# 计算 MSE 和 MAE
+mse_test <- mean((predicted_test - actual_test)^2)
+mae_test <- mean(abs(predicted_test - actual_test))
+
+# 2. 基于 train_data 的 R² 和 Adjusted R²
+# 计算总平方和和回归平方和
+actual_train <- train_data$price
+predicted_train <- predict(model_glm, newdata = train_data, type = "response")
+
+ss_total <- sum((actual_train - mean(actual_train))^2)
+ss_residual <- sum((actual_train - predicted_train)^2)
+
+# 计算 R² 和 Adjusted R²
+r_squared <- 1 - (ss_residual / ss_total)
+n <- nrow(train_data)
+p <- length(coef(model_glm)) - 1  # 模型中的预测变量数量
+adjusted_r_squared <- 1 - ((1 - r_squared) * (n - 1) / (n - p - 1))
+
+# 3. 计算过度离散性
+dispersion_ratio <- deviance(model_glm) / df.residual(model_glm)
+
+# 4. 将结果格式化为表格
+
+# 结果 1：基于测试集的 MSE 和 MAE
+test_results <- data.frame(
+  Metric = c("MSE (Test)", "MAE (Test)"),
+  Value = c(mse_test, mae_test)
+)
 
 
-## Posterior predictive check
+# 结果 3：过度离散性: summary(model)里面有
+dispersion_result <- data.frame(
+  Metric = "Dispersion Ratio",
+  Value = dispersion_ratio
+)
+
+# 使用 knitr::kable 将表格输出
+cat("### Test Data Results\n")
+kable(test_results, caption = "Performance Metrics on Test Data", digits = 3)
+
+cat("\n### Dispersion Check\n")
+kable(dispersion_result, caption = "Overdispersion Check", digits = 3)
 
 
+
+```
+
+## Feature importance analysis{#sec-importance}
 
 ```{r}
 #| eval: true
 #| echo: false
 #| message: false
 #| warning: false
-#| label: fig-ppcheckandposteriorvsprior
+#| label: fig-feature_importance
 #| layout-ncol: 2
-#| fig-cap: "Examining how the model fits, and is affected by, the data"
-#| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
+#| fig-cap: "Feature importance analysis"
+
+
+
+library(broom)
+
+coefficients <- tidy(model_glm)
+ggplot(coefficients, aes(x = reorder(term, estimate), y = estimate)) +
+  geom_bar(stat = "identity", fill = "lightblue") +
+  coord_flip() +
+  labs(title = "Variable Importance", x = "Variables", y = "Estimates") +
+  theme_minimal()
+
 
 ```
 
-## Diagnostics
+## Diagnostics{#sec-diagonsis}
 
 
 ```{r}
@@ -567,13 +678,11 @@ train test to fit the mode
 #| message: false
 #| warning: false
 #| label: fig-stanareyouokay
-#| fig-cap: "Checking the convergence of the MCMC algorithm"
-#| fig-subcap: ["Trace plot", "Rhat plot"]
-#| layout-ncol: 2
+#| fig-cap: "Diagonsis"
 
-#plot(first_model, "trace")
+par(mfrow = c(2, 2))  # 生成 2x2 子图布局
+plot(model_glm)
 
-#plot(first_model, "rhat")
 ```
 
 
@@ -581,4 +690,4 @@ train test to fit the mode
 \newpage
 
 
-# References
+# References{#sec-refer}
