@@ -9,9 +9,11 @@ date-format: long
 abstract: ""
 format: pdf
 number-sections: true
-bibliography: references.bib
+bibliography: 
+  - references.bib
 toc: true
 ---
+
 
 ```{r}
 #| include: false
@@ -42,10 +44,68 @@ model_lm <- readRDS(here("models/lm.rds"))
 # Data {#sec-data}
 
 ## Measurement 
+钻石颜色等数据是如何得出的
+然后提到数据集是如何得出的
+
+## Data Overview
+The data set has 2690 data and 5 variables. Variables include response variable diamond price, predictor variables Diamond Color, Diamond Carat Size, Diamond Clarity, Diamond Cut.@tbl-data summarizes the range, variable type and examples of each variable.
+更详细的请见:
+
+We use the statistical programming language R [@citeR].... Our data [@shelter].... Following @tellingstories, we consider...
+
+
+```{r}
+#| echo: false
+#| eval: true
+#| label: tbl-data
+#| tbl-cap: "Summary of Diamond Dataset"
+#| warning: false
+
+
+# Create a data frame summarizing the variables
+summary_table <- data.frame(
+  Attribute = c(
+    "Diamond Price (USD)", 
+    "Diamond Color", 
+    "Diamond Carat Size", 
+    "Diamond Clarity", 
+    "Diamond Cut"
+  ),
+  Range_or_Levels = c(
+    "1000 to 10,000 (USD)", 
+    "D to K (D: Worest, K: Best)", 
+    "0.30 to 2.02", 
+    "SI2, SI1, VS2, VS1, VVS2, VVS1, IF (Low to High)", 
+    "Ideal, Good, Very Good, Excellent (Worst to Best)"
+  ),
+  Data_Type = c(
+    "Numeric", 
+    "Categorical", 
+    "Numeric", 
+    "Categorical", 
+    "Categorical"
+  ),
+  Example = c(
+    "5000", 
+    "G", 
+    "0.8", 
+    "VS1", 
+    "Very Good"
+  )
+)
+
+# Display the table using knitr::kable
+knitr::kable(
+  summary_table, 
+  col.names = c("Attribute", "Range or Levels", "Data Type", "Example")
+)
+
+```
 
 ## Outcome Variable
 
-在appendix里面加入一个关于所有变量的table，然后在这里引用，说明变量类型什么的
+The diamond price is a continuous numerical variable, ranging from close to 1000 USD to 10,000 USD. Through the histogram of @fig-price, we can find that the price of diamonds has obvious right skewness, and with the increase of price, the number of diamonds decreases gradually. In addition, combining the histogram and box chart in @fig-price, we can find that there is no obvious abnormal value of diamond prices. Most diamond prices are concentrated in the range of 2,500 USD to 5,000 USD, with an average price of about 4,000 USD and a median of 3,500 USD, indicating that a few high-priced diamonds have raised the overall average.
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 #| label: fig-price
 #| fig-cap: "Graphs of Diamond price"
@@ -58,7 +118,7 @@ histogram_plot <- ggplot(cleaned_data, aes(x = price)) +
   geom_histogram(binwidth = 500, fill = "lightblue", color = "black", alpha = 0.7) + 
   geom_vline(xintercept = mean_price, linetype = "dashed", color = "salmon") + # Add a dashed vertical line for the mean
   labs(
-    x = "Diamond Price",
+    x = "Diamond Price(USD)",
     y = "Count"
   ) +
   theme_minimal() # Use a minimal theme for clean visualization
@@ -69,7 +129,7 @@ boxplot <- ggplot(cleaned_data, aes(x = "", y = price)) +
   geom_boxplot(fill = "pink", color = "black", alpha = 0.7, outlier.colour = "salmon") +
   labs(
     x = "",
-    y = "Diamond Price"
+    y = "Diamond Price (USD)"
   ) +
   theme_minimal()
 
@@ -84,7 +144,10 @@ combined_plot
 ## Predictor Variables
 在appendix里面加入一个关于所有变量的table，然后在这里引用，说明变量类型什么的
 解释每个变量：含义是什么，包括什么值，如何排序
-###  Predictor Variables
+
+### Color
+
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 #| label: fig-color
 #| fig-cap: "Graphs of Predictor Variables: Color"
@@ -110,8 +173,8 @@ violin_plot_color <- ggplot(cleaned_data, aes(x = color, y = price)) +
   geom_boxplot(width = 0.2, outlier.color = "salmon", outlier.shape = 8, alpha = 0.7) +  # 在小提琴图中叠加箱线图
   labs(
     title = "Violin Plot of Price by Color",
-    x = "Color",
-    y = "Price"
+    x = "Diamond Color",
+    y = "Diamond Price (USD)"
   ) +
   theme_minimal()  # 使用简洁的主题
 
@@ -120,6 +183,7 @@ combined_plot <- color_histogram_plot | violin_plot_color
 combined_plot
 ```
 
+### Carat Size
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 #| label: fig-carat_size
@@ -146,7 +210,7 @@ plot_carat_size <- ggplot(cleaned_data, aes(x = carat_size, y = price)) +
   labs(
     title = "Carat Size vs Price",
     x = "Carat Size",
-    y = "Diamond Price"
+    y = "Diamond Price (USD)"
   ) +
   theme_minimal()
 
@@ -159,7 +223,7 @@ combined_plot
 ```
 
 
-
+### Clarity
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 #| label: fig-clarity
@@ -186,7 +250,7 @@ violin_plot_clarity <- ggplot(cleaned_data, aes(x = clarity, y = price)) +
   labs(
     title = "Violin Plot of Price by Clarity",
     x = "Clarity",
-    y = "Price"
+    y = "Diamond Price(USD)"
   ) +
   theme_minimal() 
 
@@ -200,6 +264,7 @@ combined_plot
 
 ```
 
+### Cut
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 #| label: fig-cut
@@ -223,8 +288,8 @@ violin_plot_cut <- ggplot(cleaned_data, aes(x = cut, y = price)) +
   geom_boxplot(width = 0.2, outlier.color = "salmon", outlier.shape = 8, alpha = 0.7) +
   labs(
     title = "Violin Plot of Price by Cut",
-    x = "Cut",
-    y = "Price"
+    x = "Diamond Cut",
+    y = "Diamond Price (USD)"
   ) +
   theme_minimal() 
 
@@ -241,35 +306,83 @@ combined_plot
 #| label: fig-correlation_heat
 #| fig-cap: "Correlation: Heat Graph"
 
-# 按 cut, color, 和 clarity 聚合 carat_size 的均值
-agg_data <- aggregate(carat_size ~ cut + color + clarity, data = cleaned_data, FUN = mean)
 
-#agg_data <- aggregate(carat_size ~ cut + color + clarity, data = #cleaned_data, FUN = median)
+# 加载必要的库
+library(ggcorrplot)
+library(dplyr)
 
-# 绘制分面热图
-ggplot(agg_data, aes(x = cut, y = color, fill = carat_size)) +
-  geom_tile(color = "white") +
-  scale_fill_gradient(low = "lightblue", high = "pink") +
-  facet_wrap(~ clarity) + # 按 clarity 分面
-  labs(title = "Heatmap of Carat Size by Cut, Color, and Clarity",
-       x = "Cut", y = "Color", fill = "Mean Carat Size") +
-  theme_minimal()+
-  theme(axis.text.x = element_text(angle = 20, hjust = 1))+
-  theme(axis.text.y = element_text(size = 6))
+# Step 1: 创建一个包含独热编码的新的数据集
+correlated_data <- cleaned_data %>%
+  mutate(
+    color = factor(color, levels = c("D", "E", "F", "G", "H", "I", "J", "K")),
+    clarity = factor(clarity, levels = c("SI2", "SI1", "VS2", "VS1", "VVS2", "VVS1", "IF")),
+    cut = factor(cut, levels = c("Ideal", "Good", "Very Good", "Excellent"))
+  )
+
+# 使用 model.matrix 进行独热编码
+
+options(contrasts = c("contr.treatment", "contr.poly")) # 默认对比方法
+
+# 强制生成所有列
+one_hot_encoded <- cbind(
+  correlated_data %>% select(price, carat_size), # 数值变量
+  model.matrix(~ color + clarity + cut - 1, data = correlated_data, 
+               contrasts.arg = list(
+                 color = contrasts(correlated_data$color, contrasts = FALSE),
+                 clarity = contrasts(correlated_data$clarity, contrasts = FALSE),
+                 cut = contrasts(correlated_data$cut, contrasts = FALSE)
+               ))
+)
+
+# 检查列名
+colnames(one_hot_encoded)
+
+
+# 检查独热编码后的列名
+colnames(one_hot_encoded)
+
+# Step 2: 计算相关矩阵
+cor_matrix <- cor(one_hot_encoded, use = "complete.obs")
+
+# Step 3: 自定义列和行的顺序
+custom_order <- c(
+  "price", 
+  paste0("color", c("D", "E", "F", "G", "H", "I", "J", "K")), # Color levels
+  "carat_size", 
+  paste0("clarity", c("SI2", "SI1", "VS2", "VS1", "VVS2", "VVS1", "IF")), # Clarity levels
+  paste0("cut", c("Ideal", "Good", "Very Good", "Excellent")) # Cut levels
+)
+
+
+# 确保 custom_order 中的变量名存在于 cor_matrix 中
+valid_order <- intersect(custom_order, rownames(cor_matrix))
+
+# 重新排序矩阵的行和列
+cor_matrix <- cor_matrix[valid_order, valid_order]
+
+# Step 4: 绘制相关矩阵热图
+ggcorrplot(
+  cor_matrix, 
+  lab = FALSE,                 # 不显示相关系数的数值
+  hc.order = FALSE,            # 禁用层次聚类，保持指定顺序
+  type = "lower",              # 显示下三角
+  lab_size = 3,                # 数值字体大小
+  colors = c("lightblue", "white", "palevioletred"), # 热图颜色
+  tl.cex = 8                   # 标签字体大小
+)
+
+
+# 检查 color 的实际水平
+table(correlated_data$color)
+
+# 检查 clarity 的实际水平
+table(correlated_data$clarity)
+
+# 检查 cut 的实际水平
+table(correlated_data$cut)
 
 
 ```
-
-```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
-#| label: fig-correlation_heat
-#| fig-cap: "Correlation: Heat Graph"
-
-
-
-
-```
-
-
 
 
 
@@ -277,9 +390,6 @@ ggplot(agg_data, aes(x = cut, y = color, fill = carat_size)) +
 
 # Model
 
-The goal of our modelling strategy is twofold. Firstly,...
-
-Here we briefly describe the Bayesian analysis model used to investigate... Background details and diagnostics are included in [Appendix -@sec-model-details].
 
 ## Data preparation
 包括如何处理reponse来符合gamma。详细请见appendix
@@ -331,7 +441,7 @@ See appendix
 
 # Results
 
-Our results are summarized in @tbl-modelresults.
+
 
 ```{r}
 #| echo: false
@@ -413,18 +523,7 @@ Please don't use these as sub-heading labels - change them to be what your point
 
 ## Data Summary
 data section
-```{r}
-#| echo: false
-#| eval: true
-#| label: tbl-cleaned data
-#| tbl-cap: "First 8 rows of Cleaned data"
-#| warning: false
 
-head_cleaned_data <- head(cleaned_data,8)
-knitr::kable(head_cleaned_data, format = "simple", col.names = c('Diamond Price','Carat Size','Color', 'Clarity','Cut'))
-
-
-```
 Variable type
 
 ## Data Cleaning
@@ -444,9 +543,7 @@ train test to fit the mode
 
 ## Posterior predictive check
 
-In @fig-ppcheckandposteriorvsprior-1 we implement a posterior predictive check. This shows...
 
-In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. This shows... 
 
 ```{r}
 #| eval: true
@@ -458,22 +555,10 @@ In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. Th
 #| fig-cap: "Examining how the model fits, and is affected by, the data"
 #| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
 
-pp_check(model_glm) +
-  theme_classic() +
-  theme(legend.position = "bottom")
-
-posterior_vs_prior(first_model) +
-  theme_minimal() +
-  scale_color_brewer(palette = "Set1") +
-  theme(legend.position = "bottom") +
-  coord_flip()
 ```
 
 ## Diagnostics
 
-@fig-stanareyouokay-1 is a trace plot. It shows... This suggests...
-
-@fig-stanareyouokay-2 is a Rhat plot. It shows... This suggests...
 
 ```{r}
 #| echo: false
@@ -485,9 +570,9 @@ posterior_vs_prior(first_model) +
 #| fig-subcap: ["Trace plot", "Rhat plot"]
 #| layout-ncol: 2
 
-plot(first_model, "trace")
+#plot(first_model, "trace")
 
-plot(first_model, "rhat")
+#plot(first_model, "rhat")
 ```
 
 
