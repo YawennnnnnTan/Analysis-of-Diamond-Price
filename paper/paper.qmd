@@ -1,12 +1,12 @@
 ---
-title: ""
-subtitle: ""
+title: "my title"
+subtitle: "subtitle"
 author: 
   - Yawen Tan
 thanks: "Code and data are available at: [https://github.com/YawennnnnnTan/Analysis-of-Diamond-Price]"
 date: today
 date-format: long
-abstract: ""
+abstract: "4 sentence"
 format: pdf
 number-sections: true
 bibliography: 
@@ -52,10 +52,6 @@ model_lm <- readRDS(here("models/lm.rds"))
 The data set has 2690 data and 5 variables. Variables include response variable diamond price, predictor variables Diamond Color, Diamond Carat Size, Diamond Clarity, Diamond Cut. @tbl-dataset summarizes the range, variable type and examples of each variable. The detailed description of each variables will be presented in outcome variable and predictor variables section.
 
 We use the statistical programming language R [@citeR].... Our data [@shelter].... Following @tellingstories, we consider...
-
-## Measurement {#sec-measurement}
-钻石颜色等数据是如何得出的
-然后提到数据集是如何得出的
 
 
 ```{r}
@@ -105,8 +101,15 @@ knitr::kable(
 )
 
 ```
+## Measurement {#sec-measurement}
 
-## Outcome Variable {#sec-outcomevar}
+@gia_4cs illustrates the measurement of diamond features. Color is conducted by comparing the diamond against GIA’s master stones (graded from D to Z) under controlled lighting and background conditions, as light sources significantly affect appearance. At least two graders assess each diamond's color, with additional graders involved if discrepancies arise, until a consensus is reached. Clarity is performed under 10x magnification in standard observation conditions, where the grader examines internal and external characteristics, documenting inclusions, blemishes, or treatments such as laser drilling or fracture filling. Cut utilizes high-precision instruments to measure cutting proportions, angles, symmetry, and polish quality, following international standards set by organizations like GIA or AGS, with grades such as Excellent and Very Good. Carat size is determined using highly accurate electronic microbalances, capable of measuring to five decimal places, or one ten-thousandth of a carat, complemented by optical devices to assess the diamond’s proportions, dimensions, and facet angles. 
+
+
+
+
+
+## Outcome Variable: Price {#sec-outcomevar}
 
 The diamond price is a continuous numerical variable, ranging from close to 1000 USD to 10,000 USD. Through the histogram of @fig-price, we can find that the price of diamonds has obvious right skewness, and with the increase of price, the number of diamonds decreases gradually. In addition, combining the histogram and box chart in @fig-price, we can find that there is no obvious abnormal value of diamond prices. Most diamond prices are concentrated in the range of 2,500 USD to 5,000 USD, with an average price of about 4,000 USD and a median of 3,500 USD, indicating that a few high-priced diamonds have raised the overall average.
 
@@ -397,7 +400,6 @@ custom_order <- c(
 
 valid_order <- intersect(custom_order, rownames(cor_matrix))
 
-
 cor_matrix <- cor_matrix[valid_order, valid_order]
 
 
@@ -417,53 +419,48 @@ ggcorrplot(
 
 # Model{#sec-model}
 
+The goal of our modelling strategy is twofold. Firstly,...
 
-## Data preparation
-包括如何处理reponse来符合gamma。详细请见appendix
-
+Here we briefly describe the Bayesian analysis model used to investigate... Background details and diagnostics are included in [Appendix -@sec-model-details].
 
 ## Model set-up{#sec-modelsetup}
 
+Define $y_i$  as the price of the i th diamond. Predictors include:  
 
-Define \( y_i \) as the price of the \( i \)-th diamond. Predictors include:
 
-\begin{itemize}
-    \item \( x_{1i} \): The carat size of the diamond (in carats).
-    \item \( x_{2i} \): The color grade of the diamond (categorical).
-    \item \( x_{3i} \): The cut grade of the diamond (categorical).
-    \item \( x_{4i} \): The clarity grade of the diamond (categorical).
-\end{itemize}
+-   $x_{1i}$: The carat size of the diamond (in carats).
+-   $x_{2i}$: The color grade of the diamond (categorical).
+-   $x_{3i}$: The cut grade of the diamond (categorical).
+-   $x_{4i}$: The clarity grade of the diamond (categorical).
 
-**Model Structure**:
-1. **Response Distribution**:  
-   \[
-   y_i \mid \mu_i, \phi \sim \text{Gamma}(\mu_i, \phi),
-   \]
-   where \( \mu_i \) is the mean price and \( \phi \) is the dispersion parameter.
+
+
+1. **Response Distribution**: 
+   \begin{align}
+   y_i |\mu_i, \phi \sim \text{Gamma}(\mu_i, \phi),
+   \end{align}
+   where $\mu_i$ is the mean price and $\phi$ is the dispersion parameter.
 
 2. **Link Function**:  
+
    \begin{align}
-   \log(\mu_i) &= \beta_0 + \beta_1 x_{1i} 
-   + \sum_{j} \beta_{2j} \cdot \text{color}_{ij} \nonumber \\
-   &\quad + \sum_{k} \beta_{3k} \cdot \text{cut}_{ik} 
-   + \sum_{l} \beta_{4l} \cdot \text{clarity}_{il}.
+   \log(\mu_i) &= \beta_0 + \beta_1 x_{1i} + \sum_{j} \beta_{2j} \cdot \text{color}_{ij} \nonumber \\
+   &\quad + \sum_{k} \beta_{3k} \cdot \text{cut}_{ik} + \sum_{l} \beta_{4l} \cdot \text{clarity}_{il}.
    \end{align}
-   - \( \beta_0 \): Intercept term.  
-   - \( \beta_1 \): Effect of carat size.  
-   - \( \beta_{2j}, \beta_{3k}, \beta_{4l} \): Effects of color, cut, and clarity, respectively.
+   - $\beta_0$: Intercept term.  
+   - $\beta_1$: Effect of carat size.  
+   - $\beta_{2j}$, $\beta_{3k}$, $\beta_{4l}$: Effects of j color, k cut, and l clarity, where j includes: D,E,F,G,H,I,J,K; k includes: Ideal, Excellent, Very Good, Good; l include IF, VVS1, VVS2, VS1, VS2, SI1, SI2.
+
 
 3. **Mean Price**:  
    \begin{align}
-   \mu_i &= \exp\left(\beta_0 + \beta_1 x_{1i} 
-   + \sum_{j} \beta_{2j} \cdot \text{color}_{ij} \right. \nonumber \\
-   &\quad \left.+ \sum_{k} \beta_{3k} \cdot \text{cut}_{ik} 
-   + \sum_{l} \beta_{4l} \cdot \text{clarity}_{il}\right).
+   \mu_i &= \exp\left(\beta_0 + \beta_1 x_{1i} + \sum_{j} \beta_{2j} \cdot \text{color}_{ij} \right. \nonumber \\
+   &\quad \left.+ \sum_{k} \beta_{3k} \cdot \text{cut}_{ik} + \sum_{l} \beta_{4l} \cdot \text{clarity}_{il}\right)
    \end{align}
-
-
 
 ## Model justification{#sec-justification}
 为什么选择glm，以及为什么选择gamma，因为data section 里reponse符合分布
+
 We expect a positive relationship between the size of the wings and time spent aloft. In particular...
 
 We can use maths by including latex between dollar signs, for instance $\theta$.
@@ -479,8 +476,6 @@ We can use maths by including latex between dollar signs, for instance $\theta$.
 aic_value <- AIC(model_glm)
 bic_value <- BIC(model_glm)
 
-cat("AIC:", aic_value, "\n")
-cat("BIC:", bic_value, "\n")
 ```
 
 ## Model Evaluation{#sec-evaluation}
