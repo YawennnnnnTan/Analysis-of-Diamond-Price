@@ -10,7 +10,7 @@ abstract: ""
 format: pdf
 number-sections: true
 bibliography: 
-  - references.bib
+  - references .bib
 toc: true
 ---
 
@@ -26,6 +26,8 @@ library(here)
 library(ggplot2)
 library(patchwork)
 library(ggplot2)
+library(ggcorrplot)
+library(dplyr)
 
 raw_data <- read_delim(here("data/01-raw_data/diamondprice.txt"), delim = "\t")
 cleaned_data <- read_parquet(here("data/02-analysis_data/cleaned_diamondprice.parquet"))
@@ -43,9 +45,6 @@ model_lm <- readRDS(here("models/lm.rds"))
 
 # Data {#sec-data}
 
-## Measurement 
-钻石颜色等数据是如何得出的
-然后提到数据集是如何得出的
 
 ## Data Overview
 The data set has 2690 data and 5 variables. Variables include response variable diamond price, predictor variables Diamond Color, Diamond Carat Size, Diamond Clarity, Diamond Cut.@tbl-data summarizes the range, variable type and examples of each variable.
@@ -146,7 +145,9 @@ combined_plot
 解释每个变量：含义是什么，包括什么值，如何排序
 
 ### Color
-
+def:
+distribution:
+vs price:
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 #| label: fig-color
@@ -157,15 +158,13 @@ combined_plot
 # Create the histogram with mean line and density curve
 
 color_histogram_plot <- ggplot(cleaned_data, aes(x = color)) +
-  geom_bar(binwidth = 3,fill = "pink", color = "black", alpha = 0.7) + 
-  #scale_x_continuous(
-  #  breaks = 1:8, 
-  #  labels = c("D", "E", "F", "G", "H", "I", "J", "K"))+
+  geom_bar(fill = "pink", color = "black", alpha = 0.7) + 
   labs(
     title ="Distribution of Variable: Color",
     x = "Diamond Color",
     y = "Count") +
-  theme_minimal() # Use a minimal theme for clean visualization
+  theme_minimal() +
+  theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5 ))
 
 # 绘制小提琴图
 violin_plot_color <- ggplot(cleaned_data, aes(x = color, y = price)) +
@@ -176,7 +175,9 @@ violin_plot_color <- ggplot(cleaned_data, aes(x = color, y = price)) +
     x = "Diamond Color",
     y = "Diamond Price (USD)"
   ) +
-  theme_minimal()  # 使用简洁的主题
+  theme_minimal()+
+  theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5 ))
+
 
 # Combine 2 plots
 combined_plot <- color_histogram_plot | violin_plot_color
@@ -201,7 +202,9 @@ carat_size_histogram_plot <- ggplot(cleaned_data, aes(x = carat_size)) +
     x = "Diamond Carat Size",
     y = "Count"
   ) +
-  theme_minimal() # Use a minimal theme for clean visualization
+  theme_minimal()+
+  theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5 ))
+
 
 
 plot_carat_size <- ggplot(cleaned_data, aes(x = carat_size, y = price)) +
@@ -212,7 +215,9 @@ plot_carat_size <- ggplot(cleaned_data, aes(x = carat_size, y = price)) +
     x = "Carat Size",
     y = "Diamond Price (USD)"
   ) +
-  theme_minimal()
+  theme_minimal()+
+  theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5))
+
 
 
 # Combine 2 plots
@@ -240,7 +245,8 @@ clarity_histogram_plot <- ggplot(cleaned_data, aes(x = clarity)) +
     y = "Count"
   ) +
   theme_minimal() + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5))
 
 
 
@@ -252,7 +258,8 @@ violin_plot_clarity <- ggplot(cleaned_data, aes(x = clarity, y = price)) +
     x = "Clarity",
     y = "Diamond Price(USD)"
   ) +
-  theme_minimal() 
+  theme_minimal()+
+  theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5)) 
 
 
 
@@ -280,7 +287,8 @@ cut_histogram_plot <- ggplot(cleaned_data, aes(x = cut)) +
     x = "Diamond Cut",
     y = "Count"
   ) +
-  theme_minimal() # Use a minimal theme for clean visualization
+  theme_minimal()+
+  theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5))
 
 
 violin_plot_cut <- ggplot(cleaned_data, aes(x = cut, y = price)) +
@@ -291,7 +299,8 @@ violin_plot_cut <- ggplot(cleaned_data, aes(x = cut, y = price)) +
     x = "Diamond Cut",
     y = "Diamond Price (USD)"
   ) +
-  theme_minimal() 
+  theme_minimal()+
+  theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5))
 
 
 # Combine 2 plots
@@ -305,11 +314,6 @@ combined_plot
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 #| label: fig-correlation_heat
 #| fig-cap: "Correlation: Heat Graph"
-
-
-# 加载必要的库
-library(ggcorrplot)
-library(dplyr)
 
 # Step 1: 创建一个包含独热编码的新的数据集
 correlated_data <- cleaned_data %>%
@@ -333,13 +337,6 @@ one_hot_encoded <- cbind(
                  cut = contrasts(correlated_data$cut, contrasts = FALSE)
                ))
 )
-
-# 检查列名
-colnames(one_hot_encoded)
-
-
-# 检查独热编码后的列名
-colnames(one_hot_encoded)
 
 # Step 2: 计算相关矩阵
 cor_matrix <- cor(one_hot_encoded, use = "complete.obs")
@@ -372,20 +369,14 @@ ggcorrplot(
 )
 
 
-# 检查 color 的实际水平
-table(correlated_data$color)
-
-# 检查 clarity 的实际水平
-table(correlated_data$clarity)
-
-# 检查 cut 的实际水平
-table(correlated_data$cut)
-
-
 ```
 
 
 
+
+## Measurement 
+钻石颜色等数据是如何得出的
+然后提到数据集是如何得出的
 
 
 # Model
@@ -401,29 +392,39 @@ table(correlated_data$cut)
 
 Define \( y_i \) as the price of the \( i \)-th diamond. Predictors include:
 
-\begin{align} 
-- \( x_{1i} \): The carat size of the diamond (in carats).
-- \( x_{2i} \): The color grade of the diamond (categorical).
-- \( x_{3i} \): The cut grade of the diamond (categorical).
-- \( x_{4i} \): The clarity grade of the diamond (categorical).
+\begin{itemize}
+    \item \( x_{1i} \): The carat size of the diamond (in carats).
+    \item \( x_{2i} \): The color grade of the diamond (categorical).
+    \item \( x_{3i} \): The cut grade of the diamond (categorical).
+    \item \( x_{4i} \): The clarity grade of the diamond (categorical).
+\end{itemize}
 
 **Model Structure**:
 1. **Response Distribution**:  
-   \( y_i \mid \mu_i, \phi \sim \text{Gamma}(\mu_i, \phi) \),  
+   \[
+   y_i \mid \mu_i, \phi \sim \text{Gamma}(\mu_i, \phi),
+   \]
    where \( \mu_i \) is the mean price and \( \phi \) is the dispersion parameter.
 
 2. **Link Function**:  
-   \( \log(\mu_i) = \beta_0 + \beta_1 x_{1i} + \sum_{j} \beta_{2j} \cdot \text{color}_{ij} + \sum_{k} \beta_{3k} \cdot \text{cut}_{ik} + \sum_{l} \beta_{4l} \cdot \text{clarity}_{il} \).
-
+   \begin{align}
+   \log(\mu_i) &= \beta_0 + \beta_1 x_{1i} 
+   + \sum_{j} \beta_{2j} \cdot \text{color}_{ij} \nonumber \\
+   &\quad + \sum_{k} \beta_{3k} \cdot \text{cut}_{ik} 
+   + \sum_{l} \beta_{4l} \cdot \text{clarity}_{il}.
+   \end{align}
    - \( \beta_0 \): Intercept term.  
    - \( \beta_1 \): Effect of carat size.  
    - \( \beta_{2j}, \beta_{3k}, \beta_{4l} \): Effects of color, cut, and clarity, respectively.
 
 3. **Mean Price**:  
-   \( \mu_i = \exp(\beta_0 + \beta_1 x_{1i} + \sum_{j} \beta_{2j} \cdot \text{color}_{ij} + \sum_{k} \beta_{3k} \cdot \text{cut}_{ik} + \sum_{l} \beta_{4l} \cdot \text{clarity}_{il}) \).
+   \begin{align}
+   \mu_i &= \exp\left(\beta_0 + \beta_1 x_{1i} 
+   + \sum_{j} \beta_{2j} \cdot \text{color}_{ij} \right. \nonumber \\
+   &\quad \left.+ \sum_{k} \beta_{3k} \cdot \text{cut}_{ik} 
+   + \sum_{l} \beta_{4l} \cdot \text{clarity}_{il}\right).
+   \end{align}
 
-
-\end{align}
 
 
 
