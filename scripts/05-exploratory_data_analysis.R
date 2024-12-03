@@ -1,35 +1,52 @@
 #### Preamble ####
-# Purpose: Models... [...UPDATE THIS...]
-# Author: Rohan Alexander [...UPDATE THIS...]
-# Date: 11 February 2023 [...UPDATE THIS...]
-# Contact: rohan.alexander@utoronto.ca [...UPDATE THIS...]
+# Purpose: Explore the Cleaned Data
+# Author: Yawen Tan
+# Date: 2 December 2024
+# Contact: yawen.tan@utoronto.ca
 # License: MIT
-# Pre-requisites: [...UPDATE THIS...]
-# Any other information needed? [...UPDATE THIS...]
+# Pre-requisites: 
+# - The `tidyverse`,`arrow`,`dplyr` package must be installed and loaded
+# - 03-clean_data.R must have been run
 
 
 #### Workspace setup ####
 library(tidyverse)
-library(rstanarm)
+library(arrow)
+library(dplyr)
 
 #### Read data ####
-analysis_data <- read_csv("data/analysis_data/analysis_data.csv")
-
-### Model data ####
-first_model <-
-  stan_glm(
-    formula = flying_time ~ length + width,
-    data = analysis_data,
-    family = gaussian(),
-    prior = normal(location = 0, scale = 2.5, autoscale = TRUE),
-    prior_intercept = normal(location = 0, scale = 2.5, autoscale = TRUE),
-    prior_aux = exponential(rate = 1, autoscale = TRUE),
-    seed = 853
-  )
+cleaned_data <- read_parquet(here("data/02-analysis_data/cleaned_diamondprice.parquet"))
 
 
-#### Save model ####
-saveRDS(
-  first_model,
-  file = "models/first_model.rds"
+#### Explore data ####
+
+#Find the category each variables
+
+variable_types <- sapply(cleaned_data, class)
+variable_types
+
+
+#Find the range of each variables
+
+# Categories Variable: color, cut, and clarity
+color_categories <- unique(cleaned_data$color)
+cut_categories <- unique(cleaned_data$cut)
+clarity_categories <- unique(cleaned_data$clarity)
+# Continuous Variablle: carat_size, price
+carat_min <- min(cleaned_data$carat_size, na.rm = TRUE)
+carat_max <- max(cleaned_data$carat_size, na.rm = TRUE)
+price_min <- min(cleaned_data$price, na.rm = TRUE)
+price_max <- max(cleaned_data$price, na.rm = TRUE)
+# Display the results
+list(
+  Color_Categories = color_categories,
+  Cut_Categories = cut_categories,
+  Clarity_Categories = clarity_categories,
+  Carat_Size_Min = carat_min,
+  Carat_Size_Max = carat_max,
+  Pirce_Min = price_min,
+  Price_Max = price_max
 )
+
+
+
