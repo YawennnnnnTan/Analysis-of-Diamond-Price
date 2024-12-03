@@ -37,6 +37,7 @@ test_data <- read_parquet(here("data/02-analysis_data/diamondprice_test_data.par
 
 model_glm <- readRDS(here("models/glm.rds"))
 model_lm <- readRDS(here("models/lm.rds"))
+model_bayes <- readRDS(here("models/bayes.rds"))
 
 ``` 
 
@@ -49,9 +50,9 @@ model_lm <- readRDS(here("models/lm.rds"))
 
 ## Overview {#sec-overview}
 
-The data set has 2690 data and 5 variables. Variables include response variable diamond price, predictor variables Diamond Color, Diamond Carat Size, Diamond Clarity, Diamond Cut. @tbl-dataset summarizes the range, variable type and examples of each variable. The detailed description of each variables will be presented in outcome variable and predictor variables section.
+The data set has 2690 data and 5 variables. Variables include response variable diamond price, predictor variables Diamond Color, Diamond Carat Size, Diamond Clarity, Diamond Cut. @tbl-dataset summarizes the range, variable type and examples of each variable. The detailed description of each variables will be presented in outcome variable and predictor variables section.To ensure data quality and clarity, all missing values were removed, and column names were standardized for consistency and readability. Additionally, key categorical variables, including color, cut, and clarity, were converted into factors to appropriately represent their categorical nature in the analysis.
 
-We use the statistical programming language R [@citeR].... Our data [@diamonds_data].... Following @tellingstories, we consider...
+We use the statistical programming language R [@citeR], alongside several key libraries and datasets to analyze and visualize data effectively. Our data [@diamonds_data] is sourced from the Data and Story Library, providing detailed attributes of diamonds for multiple regression analysis. Following @tellingstories, we consider how storytelling principles can enhance data interpretation and presentation. The tidyverse ecosystem [@citetidyverse] underpins our data manipulation and visualization, with dplyr [@citedplyr] for data wrangling and ggplot2 integrated packages to create visualizations. The here package [@citehere] simplifies file path management, while knitr [@citeknitr] and patchwork [@patchwork] streamline report generation and composite plotting. Bayesian modeling is conducted with rstanarm [@rstanarm], leveraging robust statistical frameworks. Additionally, caTools [@caTools] aids in statistical operations such as ROC curve analysis, and ggcorrplot [@ggcorrplot] facilitates correlation visualization.
 
 
 ```{r}
@@ -420,98 +421,263 @@ ggcorrplot(
 
 # Model{#sec-model}
 
-The goal of our modelling strategy is twofold. Firstly,...
+The goal of our modeling strategy is twofold: to assess the contributions of key factors—such as carat size, diamond color, cut, and clarity—to variations in the standardized and transformed diamond price, and to provide accurate predictions of diamond prices based on these features. We use generalized linear model (GLM) implemented using the `glm` function in @citeR. The GLM model investigates the relationship between standardized, transformed diamond prices and predictors like carat size, color, cut, and clarity, using the Gamma family with a log link function. The dataset is divided into training and testing sets, with 70% of the data allocated for model fitting and parameter estimation, and the remaining 30% reserved for evaluating predictive accuracy.Background details, model evalution, diagnostics and model predictions are included in [Appendix -@sec-model-details].
 
-Here we briefly describe the Bayesian analysis model used to investigate... Background details and diagnostics are included in [Appendix -@sec-model-details].
+## Data Preprocession{#sec-dataprepare}
 
-## Model set-up{#sec-modelsetup}
+Before building the model, the data underwent several preprocessing steps to ensure compatibility and improve model performance. The response variable `price` was standardized because its values were significantly larger compared to other continuous numeric variables 'carat_size', which could disproportionately influence the model. After scaling, the response variable was transformed using the exponential function to ensure that `price` remained positive, making it more interpretable and suitable for subsequent analysis.Then, categorical variables, including `color`, `clarity`, and `cut`, were explicitly converted into factors to enable proper handling in the GLM model. Additionally, the levels of these categorical variables were reordered to define reference levels: 
+-   Variable 'color' have reference level 'K'(worst color)
+-   Variable 'clarity' have reference level 'SI2' (worst clarity)
+-   Variable 'cut' have reference level 'Good' (worst cut)
 
-Define $y_i$  as the price of the i th diamond. Predictors include:  
+## Model Set-up{#sec-modelsetup}
+
+The GLM relies on several key assumptions. Firstly, we assume the response variable $y_i$ (diamond prices) is assumed to follow a Gamma distribution with mean $\mu_i$ and dispersion parameter $\phi$. Then, we assume there is a linear relationship between the predictors and the logarithm of the mean price $\log(\mu_i)$ in the transformed space. The assumptions underlying this GLM model are as follows (1) and (2): 
+
+\begin{align}
+y_i \mid \mu_i, \phi &\sim \text{Gamma}(\mu_i, \phi),
+\end{align}
+where $\mu_i$ is the mean price and $\phi$ is the dispersion parameter.
+
+\begin{align}
+\log(\mu_i) &= \beta_0 + \beta_1 x_{1i} + \sum_{j} \beta_{2j} \cdot \text{color}_{ij} \nonumber \\
+&\quad + \sum_{k} \beta_{3k} \cdot \text{cut}_{ik} + \sum_{l} \beta_{4l} \cdot \text{clarity}_{il}.
+\end{align}
+
+Then, based on these assumptions of GLM, we get the final generalized linear model (3):
+
+\begin{align}
+\log(\text{standardized\ and\ exponentiated\ price}) &= \beta_0 + \beta_1 \cdot \text{carat\_size} \nonumber \\
+&\quad + \sum_{i=\text{E}}^{\text{K}}\gamma_i\cdot I(\text{color} = i) \nonumber \\
+&\quad + \sum_{j=\text{Good}}^{\text{Ideal}}\delta_j \cdot I(\text{cut} = j) \nonumber \\
+&\quad + \sum_{k=\text{SI2}}^{\text{IF}} \theta_k \cdot I(\text{clarity} = k).
+\end{align}
+
+- $\beta_0$: Intercept term.
+- $\beta_1$: Coefficients of carat size, indicating the influence of carat weight of diamonds on the logarithmic space of price.  
+- $\gamma_i$: Coefficient of color in category $i$, where $i$ can be D, E, F, G, H, I, J, K.
+- $\delta_j$: Coefficient of cut in category $j$, where $j$ can be Ideal, Excellent, Very Good, Good.
+- $\theta_k$: Coefficient of clarity in category $k$, where $k$ can be IF, VVS1, VVS2, VS1, VS2, SI1, SI2.
+- $I$: Indicator function, used for dummy variable coding of classified variables. Its function is to judge whether the condition in parentheses is true. If the condition is true, the function takes the value of 1; otherwise, it takes the value of 0.
+
+Since the response variable `price` is standardized and exponential-transformed and log-transformed during modeling, predicting the price requires reversing these transformations by only applying the inverse of the standardization because exponential-transformed and log-transformed cancel each other. Thus, the formula for predicting the price is (4):
+
+\begin{align}
+\text{price} &= \log(\text{price}) \cdot \sigma + \mu.
+\end{align}
+
+-   $\sigma$: the standard deviation of price in the training data, which is 2442.597.
+-   $\mu$: the mean of price in the training data, which is 4010.706.
 
 
--   $x_{1i}$: The carat size of the diamond (in carats).
--   $x_{2i}$: The color grade of the diamond (categorical).
--   $x_{3i}$: The cut grade of the diamond (categorical).
--   $x_{4i}$: The clarity grade of the diamond (categorical).
+
+## Model Justification{#sec-justification}
+
+We expect a positive relationship between predictors (carat size, cut, color and  clarity) and response variable price. To test this relationship, we chose the Generalized Linear Model (GLM) with a Gamma distribution and a log link function. 
+For categorical predictors like color, clarity, and cut, by setting the lowest quality levels (e.g., K for color, SI2 for clarity, and Good for cut) as reference levels, we can directly interpret the coefficients as the incremental effect of higher-quality levels on diamond prices. For continuous predictor carat size, we can interpret the coefficients in the model as how it influence diamond prices. This setup also aligns with our expectation that higher-quality diamonds (in terms of color, clarity, and cut) will positively influence price. 
+
+The Generalized Linear Model (GLM) was chosen for its flexibility and ability to handle diverse response variable distributions. Unlike traditional linear models, which require normally distributed response variables, the GLM accommodates non-normal distributions, making it particularly well-suited for our data where the response variable, diamond price, follows a Gamma distribution, as shown in @fig-price. By specifying the log link function, the GLM captures the nonlinear relationship between the response variable and predictors, allowing for better modeling of the price variability while maintaining interpret ability and precision.
+
+Despite its advantages, the GLM has potential limitations and may not be suitable in certain scenarios. When the distribution of response variable is hard to observe, we may not able to assume its distribution. Furthermore, highly nonlinear relationships may not be adequately captured by the specified link function, requiring alternative modeling approaches. 
+
+Furthermore, to validate and evaluate the model, a test dataset was used to calculate key metrics such as Root Mean Squared Error (RMSE), Mean Absolute Error (MAE), and Mean Squared Error (MSE). These metrics quantify the model's predictive accuracy and help identify potential areas of improvement. And the predicted values and the actual values are visualized and diagnostics are presented. These details are provided in @sec-model-details.
 
 
+## Model Comparision {#sec-compare}
 
-1. **Response Distribution**: 
-   \begin{align}
-   y_i |\mu_i, \phi \sim \text{Gamma}(\mu_i, \phi),
-   \end{align}
-   where $\mu_i$ is the mean price and $\phi$ is the dispersion parameter.
+In addition to the generalized linear model, we also explore and compare alternative models, including linear regression and Bayesian regression.
 
-2. **Link Function**:  
+a. Linear Regression Model:
 
-   \begin{align}
-   \log(\mu_i) &= \beta_0 + \beta_1 x_{1i} + \sum_{j} \beta_{2j} \cdot \text{color}_{ij} \nonumber \\
-   &\quad + \sum_{k} \beta_{3k} \cdot \text{cut}_{ik} + \sum_{l} \beta_{4l} \cdot \text{clarity}_{il}.
-   \end{align}
-   - $\beta_0$: Intercept term.  
-   - $\beta_1$: Effect of carat size.  
-   - $\beta_{2j}$, $\beta_{3k}$, $\beta_{4l}$: Effects of j color, k cut, and l clarity, where j includes: D,E,F,G,H,I,J,K; k includes: Ideal, Excellent, Very Good, Good; l include IF, VVS1, VVS2, VS1, VS2, SI1, SI2.
+The advantage of Linear model is that the results are easy to explain, and it can provide accurate parameter estimation under the condition of satisfying basic assumptions (such as linear relationship, normality, independence and variance homogeneity). However, its disadvantage is that the assumptions of the data are strict, and when the data violates these assumptions, the estimation of the model may be invalid. We use linear regression model implemented using the `lm` function in @citeR and use training dataset for model fitting and test dataset for model evaluation.
 
+b. Bayesian regression Model:
 
-3. **Mean Price**:  
-   \begin{align}
-   \mu_i &= \exp\left(\beta_0 + \beta_1 x_{1i} + \sum_{j} \beta_{2j} \cdot \text{color}_{ij} \right. \nonumber \\
-   &\quad \left.+ \sum_{k} \beta_{3k} \cdot \text{cut}_{ik} + \sum_{l} \beta_{4l} \cdot \text{clarity}_{il}\right)
-   \end{align}
+The advantage of Bayesian model lies in its flexibility, which is especially suitable for scenes with less data, complex distribution or the need to combine prior knowledge. However, the disadvantage of Bayesian model lies in its high computational complexity, and improper selection of prior distribution may significantly affect the inference results. We also use the Bayesian Regression model to analyze the relationship between diamond prices and various predictors, implemented using the `stan_glm` function from the rstanarm package (@rstanarm) in @citeR. The model assumes a Gamma family with a log link function, and the priors are specified as weakly informative: normal distributions (mean = 0, standard deviation = 10) for both the coefficients and intercept, and an exponential distribution (rate = 3) for the auxiliary parameter.
 
-## Model justification{#sec-justification}
-为什么选择glm，以及为什么选择gamma，因为data section 里reponse符合分布
+c. Comparision Result:
 
-We expect a positive relationship between the size of the wings and time spent aloft. In particular...
-
-We can use maths by including latex between dollar signs, for instance $\theta$.
-
-
-## Model Comparision: Generalized Linear Model vs. Linear Model {#sec-compare}
+@tbl-modelcompare shows that the Generalized Linear Model (GLM) outperforms the other models in both predictive accuracy and model parsimony. The GLM achieved the lowest Mean Squared Error (MSE) of 1.627, Mean Absolute Error (MAE) of 0.517, and Root Mean Squared Error (RMSE) of 1.276, indicating superior performance in predicting the scaled and transformed diamond prices. Furthermore, it also has the lowest Akaike Information Criterion (AIC) of 962.513 and Bayesian Information Criterion (BIC) of 1068.332, suggesting that it provides a more parsimonious fit to the data compared to the other models. In contrast, the Linear Model (LM) and Bayesian model demonstrated notably poorer performance. The LM exhibited an MSE of 2.231, an MAE of 0.954, and an RMSE of 1.494, while the Bayesian model displayed an MSE of 6.255, an MAE of 1.775, and an RMSE of 2.501, all significantly higher than the GLM's metrics. Additionally, the AIC and BIC scores for the LM were 6685.589 and 6791.408, respectively, reflecting both higher complexity and inferior predictive power. The Bayesian model, however, lacked calculable AIC and BIC values. The Bayesian model's AIC and BIC values are `NA` because `rstanarm` does not natively calculate these metrics. AIC and BIC are traditionally based on maximum likelihood estimation (MLE), which is not directly applicable to Bayesian models that rely on posterior distributions rather than MLE. Instead, Bayesian models are typically evaluated using metrics like the Deviance Information Criterion (DIC) or the Watanabe-Akaike Information Criterion (WAIC), which are designed to work with posterior distributions. 
 ```{r}
 #| echo: false
 #| eval: true
 #| label: tbl-modelcompare
-#| tbl-cap: "Model Reulst: Prediction of Diamond Price based on Color, Cut, Clarity and Carat Size"
+#| tbl-cap: "Model Comparison Metrics for GLM, LM, and Bayesian Models"
 #| warning: false
-aic_value <- AIC(model_glm)
-bic_value <- BIC(model_glm)
+
+#Prepare test data
+test_data <- read_parquet(here("data/02-analysis_data/diamondprice_test_data.parquet"))
+
+test_data$price <- scale(test_data$price, center = TRUE, scale = TRUE)
+test_data$price<-exp(test_data$price)
+test_data$color <- factor(test_data$color)
+test_data$cut <- factor(test_data$cut)
+test_data$clarity <- factor(test_data$clarity)
+
+# Find predictions based on 2 models
+predictions_glm <- predict(model_glm, newdata = test_data, type = "response")
+predictions_lm <- predict(model_lm, newdata = test_data)
+predictions_bayes <- predict(model_bayes, newdata = test_data)
+
+# Calculate MSE
+mse_glm <- mean((test_data$price - predictions_glm)^2)
+mse_glm <- round(mse_glm, 3)
+mse_lm <- mean((test_data$price - predictions_lm)^2)
+mse_lm <- round(mse_lm, 3)
+mse_bayes <- mean((test_data$price - predictions_bayes)^2)
+mse_bayes <- round(mse_bayes, 3)
+
+# Calculate MAE
+mae_glm <- mean(abs(test_data$price - predictions_glm))
+mae_glm <- round(mae_glm, 3)
+mae_lm <- mean(abs(test_data$price - predictions_lm))
+mae_lm <- round(mae_lm, 3)
+mae_bayes <- mean(abs(test_data$price - predictions_bayes))
+mae_bayes <- round(mae_bayes, 3)
+
+# Calculate RMSE
+rmse_glm <- sqrt(mse_glm)
+rmse_glm <- round(rmse_glm, 3)
+rmse_lm <- sqrt(mse_lm)
+rmse_lm <- round(rmse_lm, 3)
+rmse_bayes <- sqrt(mse_bayes)
+rmse_bayes <- round(rmse_bayes, 3)
+
+# Find AIC and BIC
+aic_glm <- AIC(model_glm)
+aic_glm <- round(aic_glm, 3)
+aic_lm <- AIC(model_lm)
+aic_lm <- round(aic_lm, 3)
+aic_bayes <- AIC(model_bayes) # NA
+bic_glm <- BIC(model_glm)
+bic_lm <- BIC(model_lm)
+bic_bayes <- BIC(model_bayes) # NA
+
+
+# Combine results into a data frame for summary
+model_comparison <- data.frame(
+  Model = c("GLM", "LM", "Bayesian"),
+  MSE = c(mse_glm, mse_lm, mse_bayes),
+  MAE = c(mae_glm, mae_lm, mae_bayes),
+  RMSE = c(rmse_glm, rmse_lm, rmse_bayes),
+  AIC = c(aic_glm, aic_lm, NA),
+  BIC = c(bic_glm, bic_lm, NA)
+)
+
+knitr::kable(model_comparison, format = "pipe")
 
 ```
 
-## Model Evaluation{#sec-evaluation}
-See appendix
 
 # Results{#sec-result}
-## Model Result{#sec-modelresult}
 
-```{r}
-#| echo: false
-#| eval: true
-#| label: tbl-modelresults
-#| tbl-cap: "Model Reulst: Prediction of Diamond Price based on Color, Cut, Clarity and Carat Size"
-#| warning: false
+@fig-modelresults shows the relative contribution of carat weight, color, cut and clarity to the diamond price after standardization and exponential transformation and logarithmic transformation. And @fig-modelresults also visualizes the estimated regression coefficient of each variable and its 95% confidence interval. We can find:
+-   Carat Size: Carat weight has the most significant positive impact on diamond price, with a regression coefficient of 3.73. This indicates that as carat weight increases, the diamond price rises, which aligns with expectations.
 
-# 获取 model_glm 的系数摘要
+-   Color: Higher-grade colors (e.g., D) have the largest positive impact on diamond prices, with a coefficient of 1.343 for color D compared to the baseline (K, the lowest grade). Lower-grade colors (e.g., J and I) have progressively smaller positive coefficients, suggesting that price increases are more obvious for diamonds with higher color grades.
+
+-   Clarity: Similar to color, higher clarity grades (e.g., IF and VVS1) positively influence diamond prices. For instance, the coefficient for clarity IF is 0.926, while VVS1 is 0.896, compared to the baseline clarity grade (SI2). Lower clarity grades (closer to the baseline) have relatively smaller positive coefficients, showing their lesser contribution to price increases.
+
+-   Cut: Cut quality has a smaller impact compared to other factors. For example, the "Ideal" cut has a coefficient of 0.216, which indicates a slight positive impact compared to the baseline ("Good" cut). Similarly, "Excellent" and "Very Good" cuts contribute marginally to price increases.
+
+-   Intercept: The intercept of -4.805 represents the baseline value of diamond price (after transformation) when all predictors are at their reference levels (i.e., K for color, SI2 for clarity, and Good for cut).
+
+In summary, carat weight has the most significant impact on diamond prices, followed by clarity and color, while cut quality has a relatively smaller effect. These results suggest that buyers prioritize carat weight and the diamond's visual attributes (color and clarity) over the precision of the cut.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-modelresults
+#| fig-cap: "Model Results"
+
+# Get the coefficients and their confidence intervals
 model_summary <- summary(model_glm)$coefficients
-
-# 将摘要转换为数据框，便于 knitr::kable 格式化
 model_summary_df <- as.data.frame(model_summary)
-summary(model_glm)
-# 使用 knitr::kable 输出表格
-knitr::kable(
-  model_summary_df,
-  digits = 3,  # 设置小数点后保留 3 位
-  format = "pipe"  # 输出格式，可选 "html", "latex", "pipe" 等
-)
+model_summary_df$Predictors <- rownames(model_summary_df)
+
+# Calculate 95% confidence intervals
+model_summary_df$CI_Lower <- model_summary_df$Estimate - 1.96 * model_summary_df$`Std. Error`
+model_summary_df$CI_Upper <- model_summary_df$Estimate + 1.96 * model_summary_df$`Std. Error`
+
+# Create the plot
+ggplot(model_summary_df, aes(x = Estimate, y = reorder(Predictors, Estimate))) +
+  geom_point(color = "palevioletred") +  # Coefficients as points
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) +  # Confidence intervals
+  geom_text(aes(label = round(Estimate, 3)), hjust = -0.3, size = 3) +  # Lable estimates
+  theme_minimal() +  # Minimal theme
+  labs(
+    x = "Coefficient Estimate",
+    y = "Predictors"
+  ) + 
+  theme(axis.text.y = element_text(size = 8))  # Adjust y-axis text size
+
 ```
 
 
-## Predictions vs Actual Value{#sec-predictions}
+
+## Example of Prediction{#sec-example}
+
+
+
+# Discussion{#sec-discussion}
+
+## Exploration of Model Result {#sec-exploration}
+
+This study examines how key features of diamonds, such as carat size, color, clarity, and cut, influence their prices. The results show that carat weight has the most significant impact on diamond prices, followed by clarity and color, while cut quality has a relatively smaller effect. These findings highlight the preferences and values that drive consumer behavior and shape industry practices. By understanding the role of each predictor, we can explore the deeper social and cultural meanings behind these choices, such as the importance of visibility, aesthetics, and societal expectations in defining value.
+
+Carat size has the strongest impact on price. Larger diamonds are often associated with wealth, success, and love, making them highly desirable for significant events like engagements and weddings. This focus on size shows how people value physical attributes that are easily noticeable, often linking material possessions to social status and personal achievements. Economically, the preference for size drives demand for larger diamonds, encouraging industries to focus on producing and marketing them as rare and valuable.
+
+Color and clarity also have a strong effect on price. Higher grades in these features lead to much higher prices, which shows that buyers are willing to pay more for diamonds that look perfect or flawless. Even though these differences might not always be noticeable to the average person, marketing and cultural standards make these traits seem important. This focus influences how diamonds are graded and priced, creating a market where beauty and perfection are key drivers of value.
+
+Cut, while important for a diamond's brilliance, has a smaller impact on price compared to the other features. This suggests that buyers may undervalue the craftsmanship behind the cut, focusing instead on features like size and color that are easier to see and compare. This pattern is common in luxury markets, where visible traits often matter more than technical quality or skill.
+
+In conclusion, diamond prices are influenced by a mix of consumer behavior, cultural values, and industry practices. Buyers tend to value features that are visible and easy to compare, driving demand and shaping market trends. This study shows how societal values influence pricing and production, not only in the diamond market but also in other areas of the luxury goods industry.
+
+
+## Limitations{#sec-limitation}
+
+### Data Limitations{#sec-datalimit}
+
+Although the data set is valuable, there are several limitations, which affect the universality and depth of the research results. A key limitation is the limited price range, which only includes diamonds with a price between $1,000 and $10,000. This does not include low-priced and high-end luxury diamonds, which may miss the unique pricing model of these market segments. In addition, the price distribution is seriously tilted to the right, and most of the prices are concentrated between 2500 and 5000 dollars. This imbalance may lead to deviation in the analysis, because diamonds with higher prices may be affected by different market factors and their representation is insufficient.
+
+Another limitation is that the data set narrowly focuses on physical properties, such as carat size, color, clarity and cutting, while ignoring background factors such as brand reputation, certification sources and market trends. These external factors will significantly affect pricing, but they are not taken into account in the data. In addition, the data set lacks geographical and cultural details, which can provide insights into regional differences in preferences and needs. This omission limits the global applicability of the research results, because diamond pricing often varies with the market and consumer base.
+
+The dataset also simplifies some predictor variables, particularly cut quality, by classifying them into broad groups (Ideal, Excellent, Very Good, and Good) without accounting for finer details like proportions or symmetry. These details, such as the arrangement of facets or crown angles, are crucial for evaluating a diamond's brilliance and could provide a deeper explanation for price variations. Similarly, the color and clarity variables are not fully represented. For instance, diamond color is graded from D (colorless) to Z (light yellow or brown), but the dataset only includes colors from D to K, leaving out lower-grade colors that could provide additional insights. Moreover, the absence of time-related factors limits the ability to analyze how diamond prices change over time due to shifts in consumer preferences, market trends, or seasonal effects.
+
+Finally, the data set shows the potential problems of imbalance and lack of diversity. For example, a lower quality cut (good) and a lower color grade (k) are insufficient, which may lead to distorted results and limit the ability to draw conclusions about these groups. In addition, if the data set comes from a single retailer or region, the results may reflect localized pricing strategies or consumer preferences, rather than broader market trends, thus reducing its generalization to other environments.
+
+### Model Limitations{#sec-modellimit}
+One limitation of the GLM model is its inability to fully capture the complexity of diamond price variability due to its fixed distributional assumptions. The use of the Gamma distribution with a log link function, while appropriate for positive and skewed data, may oversimplify the true underlying patterns in the data. This is particularly evident in higher price ranges, where the model underestimates prices. 
+
+Another limitation is in how the predictors are handled. The model treats clarity, color, and cut as categorical variables divided into broad categories, which simplifies their complexity. For example, subtle variations within a clarity grade or interactions between attributes, like how cut quality might impact price differently depending on carat size, are not accounted for. These oversimplifications may prevent the model from capturing more detailed relationships, potentially reducing its predictive accuracy.
+
+
+## Futurer Direction {#sec-further}
+To improve the depth and reliability of future research, several enhancements to the dataset and model can be considered. Expanding the price range to include both low-cost and luxury diamonds would provide a broader view of pricing patterns across the market. Additionally, addressing imbalances by incorporating underrepresented categories, such as lower-quality cuts and color grades, would reduce bias and improve generalizability. We could also include additional predictors, such as cut proportions, symmetry, and time, to enable a more detailed analysis of pricing factors and facilitate the study of price trends over time, including seasonal effects, and market fluctuations. The model can be improved by adopting more flexible approaches, such as generalized additive models (GAMs) or Bayesian hierarchical models, which can better handle non-linear relationships and interactions between predictors. These methods are particularly useful for capturing complex patterns in data, especially in higher price ranges. And to address variability and outliers, techniques like robust regression or weighted least squares can help manage non-constant variance in residuals, while carefully identifying and examining influential points can reduce their impact on predictions. 
+
+
+
+
+\newpage
+
+\appendix
+
+# Appendix {-}
+
+# Additional Model details {#sec-model-details}
+
+## Predicted Diamond Prices {#sec-predictions}
+
+@fig-prediction_actual compares the predicted prices from the GLM model (blue line) with the scaled and transformed prices from the test dataset (red points). It is important to note that the prices shown in the plot are not the actual diamond prices. The response variable, `price`, was first scaled using z-score normalization and then exponentiated. Additionally, the predictions from the GLM model were transformed using a log link function, which is consistent with the assumptions of the Gamma distribution.
+
+The GLM model captures the general trend of the transformed prices well, especially in the lower and middle ranges. The predicted values closely follow the transformed prices in these areas, indicating that the GLM model performs well for most of the data. However, at higher transformed price levels, the predictions tend to underestimate the values, as indicated by the wider spread of red points compared to the smoother blue line. The variability of the transformed prices increases at higher indices, but the model does not fully capture this. This suggests that the GLM model, with its fixed Gamma distribution and log link function, may oversimplify the behavior of the response variable in these regions. The underestimation at higher levels highlights potential limitations in the model’s assumptions.
+
+In summary, while the GLM model effectively models the scaled and transformed price data for most observations, it struggles to account for the increasing variability in higher ranges. Further refinements, such as addressing variability or investigating the suitability of the distributional assumptions, could improve the model’s performance.
+
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 #| label: fig-prediction_actual
 #| fig-cap: "Actual vs Predicted Values"
+test_data <- read_parquet(here("data/02-analysis_data/diamondprice_test_data.parquet"))
 
 test_data$price <- scale(test_data$price, center = TRUE, scale = TRUE)
 test_data$price<-exp(test_data$price)
@@ -526,7 +692,7 @@ ggplot(data = test_data, aes(x = 1:nrow(test_data))) +
   geom_point(aes(y = price), color = "palevioletred", size = 2) + 
   labs(
     x = "Index",
-    y = "Price"
+    y = "log(scale(Price)"
   ) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5)) 
@@ -535,148 +701,52 @@ ggplot(data = test_data, aes(x = 1:nrow(test_data))) +
 ```
 
 
-## Example of Prediction{#sec-example}
+## Evaluation Metrics {#sec-evaluation}
 
+@fig-metrics shows how the Generalized Linear Model (GLM) was evaluated on the test dataset using three key metrics: Mean Squared Error (MSE), Mean Absolute Error (MAE), and Root Mean Squared Error (RMSE). The MSE of 1.627 indicates that the overall squared differences between the predicted and actual diamond prices are relatively small, suggesting that the model captures the relationship between the predictors and the response variable reasonably well. However, since MSE amplifies the impact of larger errors, it is complemented by RMSE for better interpret ability.The MAE of 0.517 shows that, on average, the absolute difference between the predicted and actual values is low. This highlights the model's strong ability to provide accurate predictions in most cases and reflects that its performance is not heavily skewed by outliers. Compared to MSE, MAE is less sensitive to extreme errors, offering a more balanced perspective on prediction accuracy. The RMSE of 1.276, being the square root of MSE, provides a direct measure of the standard deviation of prediction errors in the original data's units. While RMSE tends to be slightly higher than MAE because it gives more weight to larger errors, its relatively low value confirms the model's stability and reliable performance on the test data. However, the gap between RMSE and MAE suggests the presence of some larger errors or outliers that may require further investigation.Overall, these metrics indicate that the GLM performs well in predicting diamond prices, with reasonable accuracy and controlled error levels. 
 
-
-
-
-
-# Discussion{#sec-discussion}
-
-## First discussion point {#sec-first-point}
-
-If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
-
-## Limitations{#sec-limitation}
-### Data Limitations{#sec-datalimit}
-数据分布不均
-### Model Limitations{#sec-modellimit}
-
-
-## Further Considerations{#sec-further}
-
-
-\newpage
-
-\appendix
-
-# Appendix {-}
-
-
-# Additional data details {#sec-addtionaldata}
-
-## Data Cleaning{#sec-dataclean}
-data section
-## Data Preparation and Data Split{#sec-dataprepare}
-Model Section
-
-response variable
-train test to fit the mode
-
-
-# Additional Model details {#sec-model-details}
-
-
-## Evaluation Metrics and Diagnostic Table{#sec-evaluation}
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
-#| label: fig-evaluation
-#| fig-cap: "Actual vs Predicted Values"
+#| label: fig-metrics
+#| fig-cap: "GLM Model Metrics"
 
-# 加载必要的库
-library(knitr)
-
-# 假设 `model_glm` 是基于 `train_data` 构建的模型
-# 假设 `test_data` 是用于测试的独立数据集
-
-# 1. 使用 test_data 计算 MSE 和 MAE
-predicted_test <- predict(model_glm, newdata = test_data, type = "response")
-actual_test <- test_data$price  # 假设价格列为 'price'
-
-# 计算 MSE 和 MAE
-mse_test <- mean((predicted_test - actual_test)^2)
-mae_test <- mean(abs(predicted_test - actual_test))
-
-# 2. 基于 train_data 的 R² 和 Adjusted R²
-# 计算总平方和和回归平方和
-actual_train <- train_data$price
-predicted_train <- predict(model_glm, newdata = train_data, type = "response")
-
-ss_total <- sum((actual_train - mean(actual_train))^2)
-ss_residual <- sum((actual_train - predicted_train)^2)
-
-# 计算 R² 和 Adjusted R²
-r_squared <- 1 - (ss_residual / ss_total)
-n <- nrow(train_data)
-p <- length(coef(model_glm)) - 1  # 模型中的预测变量数量
-adjusted_r_squared <- 1 - ((1 - r_squared) * (n - 1) / (n - p - 1))
-
-# 3. 计算过度离散性
-dispersion_ratio <- deviance(model_glm) / df.residual(model_glm)
-
-# 4. 将结果格式化为表格
-
-# 结果 1：基于测试集的 MSE 和 MAE
-test_results <- data.frame(
-  Metric = c("MSE (Test)", "MAE (Test)"),
-  Value = c(mse_test, mae_test)
+# Organize GLM data into a table
+glm_metrics <- data.frame(
+  Metric = c("MSE", "MAE", "RMSE"),
+  Value = c(mse_glm, mae_glm, rmse_glm)
 )
 
+# Use knitr::kable to format the table
+knitr::kable(glm_metrics, format = "pipe", col.names = c("Metric", "Value"))
 
-# 结果 3：过度离散性: summary(model)里面有
-dispersion_result <- data.frame(
-  Metric = "Dispersion Ratio",
-  Value = dispersion_ratio
-)
-
-# 使用 knitr::kable 将表格输出
-cat("### Test Data Results\n")
-kable(test_results, caption = "Performance Metrics on Test Data", digits = 3)
-
-cat("\n### Dispersion Check\n")
-kable(dispersion_result, caption = "Overdispersion Check", digits = 3)
 
 
 
 ```
 
-## Feature importance analysis{#sec-importance}
-
-```{r}
-#| eval: true
-#| echo: false
-#| message: false
-#| warning: false
-#| label: fig-feature_importance
-#| layout-ncol: 2
-#| fig-cap: "Feature importance analysis"
-
-
-
-library(broom)
-
-coefficients <- tidy(model_glm)
-ggplot(coefficients, aes(x = reorder(term, estimate), y = estimate)) +
-  geom_bar(stat = "identity", fill = "lightblue") +
-  coord_flip() +
-  labs(title = "Variable Importance", x = "Variables", y = "Estimates") +
-  theme_minimal()
-
-
-```
 
 ## Diagnostics{#sec-diagonsis}
 
+@fig-diag from the GLM model shows how well the model performs and whether it follows the key assumptions of the Gamma distribution with a log link.
+
+The "Residuals vs. Fitted" plot indicates a slight curvature in the residuals, particularly at lower fitted values, suggesting potential non-linearity or slight misspecification in the link function. Additionally, the spread of residuals increases slightly for higher fitted values, hinting at heteroscedasticity (non-constant variance). Ideally, residuals should be randomly scattered around zero with no discernible pattern.
+
+The Q-Q plot assesses whether the residuals conform to the theoretical Gamma distribution. While most points follow the diagonal line, deviations are observed in the upper quantiles, with several extreme residuals identified (e.g., points 1930, 1899). These deviations shows that the model may not fully capture the response variable's distribution or that outliers are present. 
+
+The Scale-Location plot further supports evidence of heteroscedasticity, as the variance of residuals increases with higher fitted values. Ideally, the points should be evenly spread around the horizontal line, but the observed increase in variance indicates that the model might benefit from additional adjustments to better handle variability in the response variable. 
+
+The "Residuals vs. Leverage" plot highlights a few potentially influential points (e.g., 1930, 1899, 1924) with higher leverage. Although none of these points exceed Cook’s distance thresholds, their presence warrants closer examination to ensure they do not disproportionately affect the model.
+
+In summary, the model performs well but shows slight heteroscedasticity and deviations from the Gamma distribution. Addressing these issues and checking outliers may improve reliability and accuracy.
 
 ```{r}
 #| echo: false
 #| eval: true
 #| message: false
 #| warning: false
-#| label: fig-stanareyouokay
-#| fig-cap: "Diagonsis"
+#| label: fig-diag
+#| fig-cap: "Diagnostics"
 
-par(mfrow = c(2, 2))  # 生成 2x2 子图布局
+par(mfrow = c(2, 2))
 plot(model_glm)
 
 ```
@@ -684,6 +754,5 @@ plot(model_glm)
 
 
 \newpage
-
 
 # References{#sec-refer}
