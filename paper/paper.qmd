@@ -753,6 +753,114 @@ plot(model_glm)
 
 
 
+
+# Idealized Methodology
+
+## Overview
+
+The purpose of this study is to explore the key factors affecting the price of diamonds, including carat weight, color, clarity and cut. Through multi-wave data collection and strict data quality control, the goal of this study is to build an accurate forecasting model and provide a deep understanding of market trends. The research method combines extensive sample recruitment, diversified data collection techniques and statistical modeling tools to provide reliable basis for quantitative analysis and qualitative interpretation.
+
+## SamplingApproach
+
+In this study, stratified random sampling method is used to ensure that the samples are representative enough.
+
+-   Stratification criteria include geographical area, income level and purchasing preference.
+-   The sample size is set to 3000 to meet the confidence level of 95% and the error range of 3%.
+-   Data sources include diamond retailers, auction platforms and online consumer surveys.
+
+## Recruitment
+
+Participants are recruited through the following channels:
+
+-   Cooperate with major jewelry retailers and market research institutions to obtain target group information through sales data.
+-   Put targeted advertisements on social media and email platforms to attract potential participants to fill in online surveys.
+-   Provide small cash rewards (such as $10 gift cards) or lucky draw opportunities to increase participation rate and reduce bias.
+
+All participants need to sign an electronic informed consent form to ensure that data collection conforms to ethical norms.
+
+## Data Collection and Survey Design
+
+Data is collected through various channels to ensure wide coverage and data quality:
+
+-   The online survey platform is used to collect consumers' purchasing behavior, preferences and socio-economic background data.
+-   Combined with the actual market data (such as transaction records), the questionnaire results are verified.
+
+The questionnaire design includes:
+-   Closed-form questions (multiple choice, Likert scale) to evaluate consumer preferences.
+-   Open-ended questions gain insight into the factors affecting prices.
+The questionnaire was optimized by small-scale pretest, focusing on reducing the ambiguity of questions and the fatigue of respondents
+
+
+## Data Validation and Quality Control
+
+-   In the data cleaning stage, incomplete and contradictory questionnaire responses were eliminated, and duplicate records were eliminated.
+-   Using outlier detection technology to identify and deal with possible problem data points.
+-   Re-verify key data points by tracking some interviewees to ensure the consistency and reliability of the answers.
+
+
+## Multi-Wave Data Collection and Aggregation
+
+In order to study market trends and price changes, data collection is divided into three waves, each with a quarterly interval:
+
+-   Wave 1: Obtain the data of consumers' price sensitivity and buying habits in peak sales season (such as festivals).
+-   Wave 2: Investigate the off-season market demand and price elasticity.
+-   Wave 3: verify the stability of the model, focusing on the analysis of the changing trend of bulk diamond buying behavior.
+
+The data are aggregated after standardization among waves to ensure the consistency of time series analysis.
+
+
+## Budget Allocation
+
+The total budget is estimated at $75,000.The allocation of funds is as follows:
+
+-   Sample recruitment and incentives (35%): including gift cards and advertising expenses.
+-   Data collection and processing (25%): Covers the cost of online platform and cleaning tools.
+-   Questionnaire design and pilot test (15%): design optimization and forecast trial expenditure.
+-   Data analysis and report writing (15%): including software use and labor costs.
+-   Quality control (10%): data verification and tracking verification costs.
+
+# Idealized Survey
+
+The idealized survey questionnaire can be accessed via the following link:
+
+https://docs.google.com/forms/d/e/1FAIpQLSe9YMFwC4RHHg36c1VY8yA-cZpdrN32yZfeCMJf_jD3qweOQg/viewform?usp=sf_link
+
+
+## Survey Questions
+
+**Demographic Questions**:
+
+1. What is your age? (open)
+
+2. What's your gender? (M/F/Other)
+
+3. What is your main source of income? (Fixed income/freelance/other)
+
+**Behavioral Patterns**:
+
+4. How often did you buy diamonds in the past year? (Never/once /2-3 times/more than 3 times)
+
+5. Where do you prefer to buy diamonds? (Holiday gifts/engagement or marriage/investment/other)
+
+**Perceptions and Attitudes**:
+
+6. Which of the following do you think has the greatest influence on the price of diamonds? (carat/color/clarity/cut/brand)
+
+7. How do you evaluate the importance of the following diamond characteristics: carat size, color, clarity, cut? (1- very unimportant, 5- very important)
+
+**Outcome Measures**:
+
+8. Assuming the same price, which of the following diamonds would you prefer to buy? (Grade D color /IF clarity /1.5 carats)
+
+9. Please rate your satisfaction with the last diamond purchase (1- very dissatisfied, 5- very satisfied).
+
+**Open-Ended Questions**
+:
+10. What do you think are the main challenges in the diamond market at present?
+
+11. Please describe the main reason why you choose a diamond.
+
+
 \newpage
 
 # References{#sec-refer}
