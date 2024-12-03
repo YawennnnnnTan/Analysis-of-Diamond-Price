@@ -3,16 +3,14 @@ title: "Datasheet for 'Diamond dataset'"
 author: 
   - Yawen Tan
 thanks: "Code and data are available at:  [https://github.com/YawennnnnnTan/Analysis-of-Diamond-Price]"
-abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
 date: today
 date-format: long
 format: pdf
 number-sections: true
-bibliography: references .bib
+bibliography: references.bib
 ---
 
 Extract of the questions from @gebru2021datasheets.
-
 The dataset discussed in this datasheet is 'Diamonds' [@diamonds_data].
 
 
