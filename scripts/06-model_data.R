@@ -43,15 +43,14 @@ model_bayes <-
     formula = price ~ carat_size + color + cut + clarity,
     data = train_data,
     family = Gamma(link = "log"),
-    prior = normal(location = 0, scale = 2.5, autoscale = TRUE),
-    prior_intercept = normal(location = 0, scale = 2.5, autoscale = TRUE),
-    prior_aux = exponential(rate = 1, autoscale = TRUE),
-    seed = 141
+    prior = normal(location = 0, scale = 10, autoscale = TRUE),
+    prior_intercept = normal(location = 0, scale = 10, autoscale = TRUE),
+    prior_aux = exponential(rate = 3, autoscale = TRUE),
   )
 
 
 #### Save Model ####
 saveRDS(model_glm, "models/glm.rds")
 saveRDS(model_lm, "models/lm.rds")
-saveRDS(model_lm, "models/bayes.rds")
+saveRDS(model_bayes, "models/bayes.rds")
 
