@@ -16,14 +16,16 @@ library(rstanarm)
 
 #### Data Preparation ####
 train_data <- read_parquet("data/02-analysis_data/diamondprice_train_data.parquet")
-test_data <- read_parquet("data/02-analysis_data/diamondprice_test_data.parquet")
 
+#Scale and exponent the response variable
 train_data$price <- scale(train_data$price, center = TRUE, scale = TRUE)
 train_data$price<-exp(train_data$price)
-train_data$color <- factor(train_data$color)
-train_data$cut <- factor(train_data$cut)
-train_data$clarity <- factor(train_data$clarity)
 
+# Covert categorical variables into factors
+# Redefine the factor level order so that the first value automatically becomes the reference level
+train_data$color <- factor(train_data$color, levels = c('K','J','I','H','G','F','E','D'))
+train_data$clarity <- factor(train_data$clarity, levels = c('SI2','SI1','VS2','VS1','VVS2','VVS1','IF'))
+train_data$cut <- factor(train_data$cut, levels = c('Good','Very Good','Excellent','Ideal'))
 
 
 #### Fit Models ####
@@ -31,7 +33,7 @@ train_data$clarity <- factor(train_data$clarity)
 model_glm <- glm(price ~ carat_size + color + cut+ clarity,
                  family = Gamma(link = "log"),
                  data = train_data)
-summary(model_glm)
+
 
 # Linear regression
 model_lm <- lm(price ~ carat_size + color + cut + clarity, data = train_data)
@@ -47,7 +49,6 @@ model_bayes <-
     prior_intercept = normal(location = 0, scale = 10, autoscale = TRUE),
     prior_aux = exponential(rate = 3, autoscale = TRUE),
   )
-
 
 #### Save Model ####
 saveRDS(model_glm, "models/glm.rds")
