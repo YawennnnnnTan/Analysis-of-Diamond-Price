@@ -1,0 +1,904 @@
+---
+title: "Predicting Diamond Pricing: A Generalized Linear Model Analysis"
+subtitle: "Carat Weight Dominates While Cut Plays a Smaller Role in Determining Price"
+author: 
+  - Yawen Tan
+thanks: "Code and data are available at: [https://github.com/YawennnnnnTan/Analysis-of-Diamond-Price]"
+date: today
+date-format: long
+abstract: "This paper investigates how the Four Cs—carat weight, color, clarity, and cut—affect diamond pricing and develops a predictive model using a Generalized Linear Model (GLM) with a Gamma distribution. The analysis shows that carat weight has the strongest positive influence on price, followed by clarity and color, while cut has a relatively smaller impact. The model demonstrates robust performance, providing a reliable framework for forecasting diamond prices and understanding market patterns. These findings enhance pricing transparency, help the diamond industry adapt to shifting consumer preferences, and provide opinions into the economic and cultural factors shaping diamond valuation."
+format: pdf
+number-sections: true
+bibliography: 
+  - references .bib
+toc: true
+---
+
+
+```{r}
+#| include: false
+#| warning: false
+#| message: false
+
+library(readr)
+library(arrow)
+library(here)
+library(ggplot2)
+library(patchwork)
+library(ggplot2)
+library(ggcorrplot)
+library(dplyr)
+library(knitr)
+
+raw_data <- read_delim(here("data/01-raw_data/diamondprice.txt"), delim = "\t")
+cleaned_data <- read_parquet(here("data/02-analysis_data/cleaned_diamondprice.parquet"))
+train_data <- read_parquet(here("data/02-analysis_data/diamondprice_train_data.parquet"))
+test_data <- read_parquet(here("data/02-analysis_data/diamondprice_test_data.parquet"))
+
+model_glm <- readRDS(here("models/glm.rds"))
+model_lm <- readRDS(here("models/lm.rds"))
+model_bayes <- readRDS(here("models/bayes.rds"))
+
+``` 
+
+
+# Introduction 
+
+Diamonds have long symbolized luxury, romance, and prestige, with their valuation primarily determined by the Four Cs: Carat weight, Color, Clarity, and Cut. The Gemological Institute of America established this standard to assess diamond quality consistently worldwide. Each of these attributes uniquely influences a diamond's market value. Carat size measures the diamond's mass, with larger diamonds being rarer and typically more expensive. Color grading evaluates the absence of color, ranging from D (colorless) to Z (light yellow or brown), with colorless diamonds commanding higher prices. Clarity shows internal and external imperfections, where fewer inclusions and blemishes enhance value. Cut quality, particularly in round brilliant diamonds, affects light reflection and overall brilliance, significantly impacting aesthetic appeal and price (@GIA4Cs). While the 4Cs provide a framework for valuation, accurately predicting diamond prices remains complex due to the interplay of these characteristics and market dynamics. Recent advancements in data analytics and machine learning have enabled more precise predictions of diamond prices based on their features. For instance, research of @Basha2024 published in the International Journal of System Assurance Engineering and Management, evaluates 23 machine learning models, including regression techniques, to predict diamond prices. The study shows the effectiveness of models like CatBoost Regressor and XGBoost Regressor in achieving high accuracy after hyperparameter tuning. Similarly, @Sharma2021 also conducts a comparative analysis of multiple supervised machine learning models, identifying Random Forest Regressor as particularly effective in predicting diamond prices. Despite these advancements, there remains a need for analyses diamond price based on other models to enhance the accuracy and reliability of diamond price predictions. This research employs a Generalized Linear Model to analyze more.
+
+This study focuses on identifying the significant factors influencing diamond prices and building a reliable model to predict prices based on diamond carat size, color, clarity and cut. The estimand is the expected diamond price given specific attributes of carat weight, color, clarity, and cut.  We use the dataset of diamond price from DASL and use Generalized Linear Model (GLM) with a Gamma distribution and log link function to analysis. It shows shows that carat weight has the strongest positive influence on price, followed by clarity and color, while cut has a relatively smaller impact. The predictive Generalized Linear Model demonstrates good performance on test data, showing its utility in forecasting diamond prices and understanding market patterns. 
+
+Understanding the driving factors of diamond pricing is not only a technical problem, but also an in-depth discussion of the complex dynamics of diamond market. The diamond industry is greatly influenced by consumer preferences and changes in market conditions. Analyzing and accurately predicting the price based on the intrinsic quality of diamonds (carat weight, color, clarity and cut) is not only meaningful for a single transaction, but also involves a wider range of market and social issues. Firstly, the pricing transparency of the diamond market is an important issue. Through a reliable pricing model, opacity can be reduced and a fairer price system can be realized. This not only protects consumers' rights and interests, but also contributes to the development of market. Secondly, studying diamond pricing can help the industry better adapt to the needs of modern consumers. By studying the main influencing factors of diamonds, retailers can optimize their inventory and marketing strategies. For example, if it is found that the weight of carats has the greatest impact on the price, retailers can give priority to the promotion of diamonds with larger carats, and at the same time highlight this feature in market promotion, so as to meet the needs of consumers more effectively. Generally speaking, this study not only provides a more scientific pricing basis for consumers, retailers and appraisers, but also provides guidance for the industry to adapt to dynamic changes.
+
+
+The remainder of this paper is structured as follows. @sec-data discusses data overview, response variable, predictor variables, data measurement and data visualization which includes the plots of each variable and its response, as well as plots of variable interactions.@sec-model shows how to generate the generalized linear regression.  @sec-result shows the relationship between carat size, color, cut and clarity in diamond price. @sec-discussion discusses the results of @sec-result going into detail which shows the complex relationship between sociocultural background and diamond price. And it also shows the limitations of research, and proposes the focus that future research should focus on to enhance the depth and accuracy of the research.
+
+
+
+# Data {#sec-data}
+
+## Overview {#sec-overview}
+
+The data set has 2690 data and 5 variables. Variables include response variable diamond price, predictor variables Diamond Color, Diamond Carat Size, Diamond Clarity, Diamond Cut. @tbl-dataset summarizes the range, variable type and examples of each variable. The detailed description of each variables will be presented in outcome variable and predictor variables section.To ensure data quality and clarity, all missing values were removed, and column names were standardized for consistency and readability. Additionally, key categorical variables, including color, cut, and clarity, were converted into factors to appropriately represent their categorical nature in the analysis.
+
+We use the statistical programming language R [@citeR], alongside several key libraries and datasets to analyze and visualize data effectively. Our data [@diamonds_data] is sourced from the Data and Story Library, providing detailed attributes of diamonds for multiple regression analysis. Following @tellingstories, we consider how storytelling principles can enhance data interpretation and presentation. The tidyverse ecosystem [@citetidyverse] underpins our data manipulation and visualization, with dplyr [@citedplyr] for data wrangling and ggplot2 integrated packages to create visualizations. The here package [@citehere] simplifies file path management, while knitr [@citeknitr] and patchwork [@patchwork] streamline report generation and composite plotting. Bayesian modeling is conducted with rstanarm [@rstanarm], leveraging robust statistical frameworks. Additionally, caTools [@caTools] aids in statistical operations, and ggcorrplot [@ggcorrplot] facilitates correlation visualization.
+
+The reason that I chose DASL is its directness and openness of data. The data set focuses on the diamond market, contains detailed 4C attributes and prices, directly supports the research objectives, and is completely open, ensuring the repeatability and transparency of the analysis. Additionally, there does not exist other data set about diamond price in the data set licensed in @tellingstories. However, we can find data about diamond prices from diamond retailers (such as Blue Nile or James Allen). However, these data sets usually come from commercial use, so they may have deviations from the inventory or pricing strategies of specific retailers. This deviation will limit the universality of the research results in a wider market. In addition, there may be some access restrictions to obtain the complete version of these data.
+
+
+```{r}
+#| echo: false
+#| eval: true
+#| label: tbl-dataset
+#| tbl-cap: "Summary of Diamond Dataset"
+#| warning: false
+
+
+# Create a data frame summarizing the variables
+summary_table <- data.frame(
+  Attribute = c(
+    "Diamond Price (USD)", 
+    "Diamond Color", 
+    "Diamond Carat Size", 
+    "Diamond Clarity", 
+    "Diamond Cut"
+  ),
+  Range_or_Levels = c(
+    "1000 to 10,000 (USD)", 
+    "D to K (D: Best, K: Worst)", 
+    "0.30 to 2.02", 
+    "SI2, SI1, VS2, VS1, VVS2, VVS1, IF (Low to High)", 
+    "Good, Very Good, Excellent, Ideal (Worst to Best)"
+  ),
+  Data_Type = c(
+    "Numeric", 
+    "Categorical", 
+    "Numeric", 
+    "Categorical", 
+    "Categorical"
+  ),
+  Example = c(
+    "5000", 
+    "G", 
+    "0.8", 
+    "VS1", 
+    "Very Good"
+  )
+)
+
+# Display the table using knitr::kable
+knitr::kable(
+  summary_table, 
+  col.names = c("Attribute", "Range or Levels", "Data Type", "Example")
+)
+
+```
+## Measurement {#sec-measurement}
+
+@gia_4cs illustrates the measurement of diamond features. Color is conducted by comparing the diamond against GIA’s master stones (graded from D to Z) under controlled lighting and background conditions, as light sources significantly affect appearance. At least two graders assess each diamond's color, with additional graders involved if discrepancies arise, until a consensus is reached. Clarity is performed under 10x magnification in standard observation conditions, where the grader examines internal and external characteristics, documenting inclusions, blemishes, or treatments such as laser drilling or fracture filling. Cut utilizes high-precision instruments to measure cutting proportions, angles, symmetry, and polish quality, following international standards set by organizations like GIA or AGS, with grades such as Excellent and Very Good. Carat size is determined using highly accurate electronic microbalances, capable of measuring to five decimal places, or one ten-thousandth of a carat, complemented by optical devices to assess the diamond’s proportions, dimensions, and facet angles. 
+
+Furthermore, @diamonds_data comes from the data crawled by Lou Valente of JMP from the Internet, and is arranged into a form suitable for educational and research purposes. This data collection method shows that the data may be collected from publicly available diamond market information or industry-related websites (such as retailer data or industry reports), and then cleaned and structured to ensure that it is suitable for statistical analysis and modeling tasks.
+
+
+
+## Outcome Variable: Price {#sec-outcomevar}
+
+The diamond price is a continuous numerical variable, ranging from close to 1000 USD to 10,000 USD. Through the histogram of @fig-price, we can find that the price of diamonds has obvious right skewness, and with the increase of price, the number of diamonds decreases gradually. In addition, combining the histogram and box chart in @fig-price, we can find that there is no obvious abnormal value of diamond prices. Most diamond prices are concentrated in the range of 2,500 USD to 5,000 USD, with an average price of about 4,000 USD and a median of 3,500 USD, indicating that a few high-priced diamonds have raised the overall average.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-price
+#| fig-cap: "Graphs of Diamond price"
+#| warning: false
+
+
+# Graph histogram
+# Calculate the mean of diamond prices
+mean_price <- mean(cleaned_data$price, na.rm = TRUE)
+# Create the histogram with mean line and density curve
+histogram_plot <- ggplot(cleaned_data, aes(x = price)) +
+  geom_histogram(binwidth = 500, fill = "lightblue", color = "black", alpha = 0.7) + 
+  geom_vline(xintercept = mean_price, linetype = "dashed", color = "salmon") + # Add a dashed vertical line for the mean
+  labs(
+    x = "Diamond Price(USD)",
+    y = "Count"
+  ) +
+  theme_minimal() # Use a minimal theme for clean visualization
+
+
+# Graph boxplot
+boxplot <- ggplot(cleaned_data, aes(x = "", y = price)) +
+  geom_boxplot(fill = "pink", color = "black", alpha = 0.7, outlier.colour = "salmon") +
+  labs(
+    x = "",
+    y = "Diamond Price (USD)"
+  ) +
+  theme_minimal()
+
+# Combine 2 plots
+combined_plot <- histogram_plot | boxplot
+combined_plot
+
+```
+
+
+
+## Predictor Variables {#sec-predictorvar}
+
+### Color{#sec-color}
+
+The diamond color, a categorical variable, represents the degree of colorlessness of a diamond. It has seven categories in the dataset, ranging from the letter D (completely colorless) to the letter K (faint yellow or brown tint), based on the GIA (Gemological Institute of America) grading system.
+
+-   D is the highest grade, completely colorless and the rarest and most expensive color in diamonds. 
+-   E and F grades are almost colorless, and extremely weak tones can only be detected under professional instruments. 
+-   G and H grades still look almost colorless, and only when compared with higher grades in bright light can a slight yellow or brown tone be observed. 
+-   I and J began to show slightly yellow tint visible, especially in larger diamonds. 
+-   K shows obvious yellow tone or brown tone.
+
+The barplot on the left of @fig-color shows the distribution of diamond color from D to K. The barplot shows that the number of diamonds with color grades E and F is the largest, indicating that these nearly colorless diamonds are more popular in the market, probably because they have high quality and cost performance. In contrast, the number of completely colorless D-class diamonds and K-class diamonds with slight yellow is small, which may be due to their rarity and color deviation, respectively, resulting in low demand. This picture directly reflects the supply of diamonds of different color grades in the market and their potential demand trends.
+The violin chart on the right of @fig-color shows the distribution of diamond prices in different color grades. The violio chart shows that the prices of diamonds with color grades D to F are generally higher, especially those with color grades D and E, which shows a wider price distribution range, indicating that the prices of high-end diamonds with these color grades can increase significantly. In contrast, the price distribution of diamonds with color grades I to K is more concentrated and the overall price is lower, reflecting that the price fluctuation of diamonds close to yellow is less in the market. In addition, there are significant outliers in top colors such as D and E, which may be due to the unusually high price of diamonds with large carats or other high-quality characteristics. This figure clearly shows the influence of color grade on price and its market value distribution characteristics.
+
+
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-color
+#| fig-cap: "Graphs of Predictor Variables: Color"
+
+
+# Predictor Variables: Color
+# Create the histogram with mean line and density curve
+
+color_histogram_plot <- ggplot(cleaned_data, aes(x = color)) +
+  geom_bar(fill = "pink", color = "black", alpha = 0.7) + 
+  labs(
+    title ="Distribution of Variable: Color",
+    x = "Diamond Color",
+    y = "Count") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5 ))
+
+
+violin_plot_color <- ggplot(cleaned_data, aes(x = color, y = price)) +
+  geom_violin(trim = FALSE, fill = "lightblue", alpha = 0.7) + 
+  geom_boxplot(width = 0.2, outlier.color = "salmon", outlier.shape = 8, alpha = 0.7) + 
+  labs(
+    title = "Violin Plot of Price by Color",
+    x = "Diamond Color",
+    y = "Diamond Price (USD)"
+  ) +
+  theme_minimal()+
+  theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5 ))
+
+
+# Combine 2 plots
+combined_plot <- color_histogram_plot | violin_plot_color
+combined_plot
+```
+
+### Carat Size{#sec-caratsize}
+
+The diamond carat size, a continuous numerical variable representing the weight of the diamond, ranges from approximately 0.30 to 2.02 carats in the dataset. One carat is equivalent to 200 milligrams, making it a key factor in determining the diamond's size and price.
+The histogram on the left of @fig-carat_size shows the distribution of the Carat Size of diamonds. On the whole, it presents a right-skewed distribution, indicating that the number of small carats (such as 0.5 to 1.0 carats) is the largest in the market, while the number of larger carats is gradually decreasing. The red dotted line in the figure indicates the average carat size, and it can be seen that the carat size of most diamonds is concentrated on the left side of the average, which further reflects the dominant position of small carat diamonds in the market. This reflects that consumers have higher demand for small carats, while large carats are scarce because of their rarity and high price.
+The scatter chart on the right of @fig-carat_size shows the relationship between the carat size of diamonds and the price. It can be clearly seen that the price rises quickly with the increase of carat size, showing a nonlinear growth trend. Especially in the range of close to 1.0 carats and larger carats, the price increase is more significant. This shows that the carat size has an important influence on the diamond price, but when the Dancla size exceeds a certain value (such as 1.5 carats), the price growth rate tends to be flat. In addition, the fitted black curve further clearly shows this nonlinear relationship, indicating that the marginal effect of carat size on price decreases.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-carat_size
+#| fig-cap: "Graphs of Predictor Variable: Carat Size"
+
+
+# Graph histogram
+# Calculate the mean of diamond prices
+mean_size <- mean(cleaned_data$carat_size, na.rm = TRUE)
+carat_size_histogram_plot <- ggplot(cleaned_data, aes(x = carat_size)) +
+  geom_histogram(fill = "palevioletred", color = "black", alpha = 0.7) +
+  geom_vline(xintercept = mean_size, linetype = "dashed", color = "salmon") +
+  labs(
+    title = "Distribution of Variable: Carat Size",
+    x = "Diamond Carat Size",
+    y = "Count"
+  ) +
+  theme_minimal()+
+  theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5 ))
+
+
+
+plot_carat_size <- ggplot(cleaned_data, aes(x = carat_size, y = price)) +
+  geom_point(color = "lightblue", alpha = 0.7) +
+  geom_smooth(method = "loess", color = "black", se = FALSE) +
+  labs(
+    title = "Carat Size vs Price",
+    x = "Carat Size",
+    y = "Diamond Price (USD)"
+  ) +
+  theme_minimal()+
+  theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5))
+
+
+
+# Combine 2 plots
+combined_plot <- carat_size_histogram_plot | plot_carat_size
+combined_plot
+
+
+```
+
+
+### Clarity{#sec-clarity}
+
+The diamond clarity, representing the number, size, location, and visibility of internal inclusions and external blemishes in a diamond, is a categorical variable with seven categories in the dataset: IF, VVS1, VVS2, VS1, VS2, SI1, and SI2. According to the GIA grading system, diamond clarity decreases progressively from IF (Internally Flawless) to SI (Slightly Included).
+ 
+-   Internally Flawless (IF) diamonds are characterized by having no visible inclusions under 10x magnification, which is nearly flawless. The only possible imperfections might be extremely fine surface blemishes, such as polishing marks, which can typically be removed with re-polishing. 
+-   Very Very Slightly Included (VVS) diamonds are divided into two subgrades: VVS1 and VVS2. VVS1 diamonds have extremely small inclusions that are barely detectable under 10x magnification, typically located at the pavilion (the bottom part of the diamond). VVS2 diamonds may have slightly more inclusions, such as tiny feather-like marks or minute blemishes, but these still require professional tools to identify.
+-   Very Slightly Included (VS) diamonds are classified into two subgrades: VS1 and VS2. VS1 diamonds have very small inclusions that are detectable under 10x magnification but careful observation to identify. VS2 diamonds contain relatively minor inclusions such as small feather-like marks or pinpoints, have more noticeable imperfections under magnification, but these imperfections have minimal impact on the diamond's overall appearance. 
+-   Slightly Included (SI) diamonds are categorized into two subgrades: SI1 and SI2. SI1 diamonds have inclusions that are more noticeable under 10x magnification and can be easily detected using professional tools. SI2 diamonds contain more inclusions, which are larger or more prominent, but these imperfections are typically not visible to the naked eye in most conditions. 
+
+The barplot on the left of @fig-clarity shows the distribution of diamond Clarity. It shows that the number of diamonds with clarity grades SI1 and SI2 is the largest, indicating that these grades of diamonds are the most widely available in the market, probably because they have higher cost performance and greater market demand. In contrast, the number of diamonds with clarity grade of IF(Internally Flawless) is the least, which reflects the rarity of completely flawless diamonds. This shows that diamonds with lower definition grades (such as SI1 and SI2) are the main ones in the market, while high definition diamonds are scarce.
+The violin chart on the right of @fig-clarity shows the distribution of diamond prices at different clarity levels. With the improvement of clarity, the price rises significantly, especially for diamonds with high definition such as IF and VVS1. The price distribution is wider and there are obvious outliers, which may be caused by the carat size or other quality characteristics of these diamonds. On the other hand, the price distribution of grades with low definition (such as SI1 and SI2) is relatively concentrated, and the median is obviously lower than that of high-grade diamonds, but their price range shows their stable demand and high cost performance in the market.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-clarity
+#| fig-cap: "Graphs of Predictor Variable: Clarity"
+
+
+# Graph histogram
+# Create the histogram with mean line
+clarity_histogram_plot <- ggplot(cleaned_data, aes(x = clarity)) +
+  geom_bar(bins = 20, fill = "pink", color = "black", alpha = 0.7) +
+  labs(
+    title = "Distribution of Variable: Clarity",
+    x = "Diamond Clarity",
+    y = "Count"
+  ) +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5))
+
+
+
+violin_plot_clarity <- ggplot(cleaned_data, aes(x = clarity, y = price)) +
+  geom_violin(trim = FALSE, fill = "lightblue", alpha = 0.7) + 
+  geom_boxplot(width = 0.2, outlier.color = "salmon", outlier.shape = 8, alpha = 0.7) +
+  labs(
+    title = "Violin Plot of Price by Clarity",
+    x = "Clarity",
+    y = "Diamond Price(USD)"
+  ) +
+  theme_minimal()+
+  theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5)) 
+
+
+
+
+# Combine 2 plots
+combined_plot <- clarity_histogram_plot | violin_plot_clarity
+combined_plot
+
+
+```
+
+### Cut{#sec-cut}
+
+The diamond Cut measures the quality of diamond cutting, which determines how a diamond reflects light, thus affecting its brightness, fire and scintillation.The diamond cut in the data set is a categorical variable with four categories: Excellent, Very Good, Good, and Ideal. According to the grading systems of GIA and AGS, cut quality decreases from Ideal to Good.
+
+-   The Ideal cut with nearly all incoming light reflecting through the diamond's top to maximize brilliance and sparkle. It features balanced and prominent fire and scintillation, with precisely cut crown and pavilion angles to achieve optimal light refraction. Proportional standards, such as table percentage and pavilion depth percentage, meet ideal criteria. The facets are perfectly aligned with no visible deviations, and the surface is finely polished, free from any scratches or blemishes.
+-   Excellent cut diamonds reflect nearly all light through the top, showcasing maximum brilliance and fire. As the high cut grade, they exhibit optimal optical performance and exceptional visual appeal.
+-   Very Good cut diamonds reflect most of the light through the top, though a small amount may escape from the sides or bottom and their brilliance and fire are slightly less than those of Excellent cut diamonds.
+-   Good cut diamonds exhibit noticeably reduced light refraction, with some light escaping from the sides or bottom and their brilliance and fire are not as strong as higher-grade cuts.
+
+The barplot on the left of @fig-cut shows the distribution of diamonds with different cutting grades. It indicates that the number of diamonds with Excellent and Very Good grades is obviously more, indicating that most diamonds on the market are concentrated in these high-cut grades, which may be because they have better visual effects and higher market demand. In contrast, the number of Good and Ideal diamonds is small, especially the rarity of Ideal cutting may reflect strict cutting ratio requirements and high quality standards.
+The violin chart on the right of @fig-cut shows the price distribution of diamonds with different cutting grades. It shows the price range of each cutting grade is very close to the median, which shows that the cutting grade has little direct influence on the price. However, Ideal and Excellent diamonds are more obviously distributed in the high-end price range, which may be because these two grades of diamonds are usually combined with other high-quality characteristics, such as high carat number or clarity. At the same time, the overall price range is relatively large, indicating that other factors (such as carats, colors, etc.) may play a more important role in determining the price.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-cut
+#| fig-cap: "Graphs of Predictor Variable: Cut"
+
+
+# Graph histogram
+# Create the histogram with mean line
+cut_histogram_plot <- ggplot(cleaned_data, aes(x = cut)) +
+  geom_bar(bins = 20, fill = "palevioletred", color = "black", alpha = 0.7)+
+  labs(
+    title = "Distribution of Variable: Cut",
+    x = "Diamond Cut",
+    y = "Count"
+  ) +
+  theme_minimal()+
+  theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5))
+
+
+violin_plot_cut <- ggplot(cleaned_data, aes(x = cut, y = price)) +
+  geom_violin(trim = FALSE, fill = "lightblue", alpha = 0.7) + 
+  geom_boxplot(width = 0.2, outlier.color = "salmon", outlier.shape = 8, alpha = 0.7) +
+  labs(
+    title = "Violin Plot of Price by Cut",
+    x = "Diamond Cut",
+    y = "Diamond Price (USD)"
+  ) +
+  theme_minimal()+
+  theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5))
+
+
+# Combine 2 plots
+combined_plot <- cut_histogram_plot | violin_plot_cut
+combined_plot
+
+
+```
+
+## Analysis of Correlation{#sec-correlation}
+
+@fig-correlation_heat shows several key points about the relationships between diamond attributes and price. Carat size shows a strong positive correlation with price, indicating that it is one of the primary factors influencing diamond value—larger diamonds tend to be more expensive. In contrast, cut (e.g., cutExcellent, cutVery Good) demonstrates a weaker correlation with price, suggesting that cut grade alone has a limited direct impact on diamond cost but may work in conjunction with other factors such as carat size or color. Similarly, color (e.g., colorD to colorK) shows a weak correlation with price, with diamonds closer to colorless (e.g., colorD and colorE) potentially commanding higher prices, but the overall effect is minimal. Clarity (e.g., clarityIF to claritySI2) also exhibit a modest relationship with price, reflecting their role as a contributing but less dominant factor in determining diamond value. Overall, carat size emerges as the most influential attribute, while other variables like cut, color, and clarity play supporting roles.
+@fig-correlation_heat also presents the relationships between the predictor variables, showing that the correlations among them are generally weak. For example, attributes like cut quality, clarity, color, and carat size do not exhibit strong intercorrelations, as most of the corresponding cells are closer to white or light blue. This suggests that the predictor variables are relatively independent, reducing the risk of multicollinearity in the analysis. The weak correlations among these variables ensure that each contributes uniquely to the model, providing a robust foundation for predicting diamond price.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-correlation_heat
+#| fig-cap: "Correlation: Heat Graph"
+
+
+correlated_data <- cleaned_data %>%
+  mutate(
+    color = factor(color, levels = c("D", "E", "F", "G", "H", "I", "J", "K")),
+    clarity = factor(clarity, levels = c("SI2", "SI1", "VS2", "VS1", "VVS2", "VVS1", "IF")),
+    cut = factor(cut, levels = c("Ideal", "Good", "Very Good", "Excellent"))
+  )
+
+
+options(contrasts = c("contr.treatment", "contr.poly"))
+
+one_hot_encoded <- cbind(
+  correlated_data %>% select(price, carat_size), 
+  model.matrix(~ color + clarity + cut - 1, data = correlated_data, 
+               contrasts.arg = list(
+                 color = contrasts(correlated_data$color, contrasts = FALSE),
+                 clarity = contrasts(correlated_data$clarity, contrasts = FALSE),
+                 cut = contrasts(correlated_data$cut, contrasts = FALSE)
+               ))
+)
+
+
+cor_matrix <- cor(one_hot_encoded, use = "complete.obs")
+
+
+custom_order <- c(
+  "price", 
+  paste0("color", c("D", "E", "F", "G", "H", "I", "J", "K")), # Color levels
+  "carat_size", 
+  paste0("clarity", c("SI2", "SI1", "VS2", "VS1", "VVS2", "VVS1", "IF")), # Clarity levels
+  paste0("cut", c("Ideal", "Good", "Very Good", "Excellent")) # Cut levels
+)
+
+
+valid_order <- intersect(custom_order, rownames(cor_matrix))
+
+cor_matrix <- cor_matrix[valid_order, valid_order]
+
+
+ggcorrplot(
+  cor_matrix, 
+  lab = FALSE,             
+  hc.order = FALSE,        
+  type = "lower",       
+  lab_size = 3,               
+  colors = c("lightblue", "white", "palevioletred"),
+  tl.cex = 8                  
+)
+
+
+```
+
+
+# Model{#sec-model}
+
+The goal of our modeling strategy is twofold: to assess the contributions of key factors—such as carat size, diamond color, cut, and clarity—to variations in the standardized and transformed diamond price, and to provide accurate predictions of diamond prices based on these features. We use generalized linear model (GLM) implemented using the `glm` function in @citeR. The GLM model investigates the relationship between standardized, transformed diamond prices and predictors like carat size, color, cut, and clarity, using the Gamma family with a log link function. The dataset is divided into training and testing sets, with 70% of the data allocated for model fitting and parameter estimation, and the remaining 30% reserved for evaluating predictive accuracy.Background details, model evalution, diagnostics and model predictions are included in [Appendix -@sec-model-details].
+
+## Data Preprocession{#sec-dataprepare}
+
+Before building the model, the data underwent several preprocessing steps to ensure compatibility and improve model performance. The response variable `price` was standardized because its values were significantly larger compared to other continuous numeric variables 'carat_size', which could disproportionately influence the model. After scaling, the response variable was transformed using the exponential function to ensure that `price` remained positive, making it more interpretable and suitable for subsequent analysis.Then, categorical variables, including `color`, `clarity`, and `cut`, were explicitly converted into factors to enable proper handling in the GLM model. Additionally, the levels of these categorical variables were reordered to define reference levels: 
+-   Variable 'color' have reference level 'K'(worst color)
+-   Variable 'clarity' have reference level 'SI2' (worst clarity)
+-   Variable 'cut' have reference level 'Good' (worst cut)
+
+## Model Set-up{#sec-modelsetup}
+
+The GLM relies on several key assumptions. Firstly, we assume the response variable $y_i$ (diamond prices) is assumed to follow a Gamma distribution with mean $\mu_i$ and dispersion parameter $\phi$. Then, we assume there is a linear relationship between the predictors and the logarithm of the mean price $\log(\mu_i)$ in the transformed space. The assumptions underlying this GLM model are as follows (1) and (2): 
+
+\begin{align}
+y_i \mid \mu_i, \phi &\sim \text{Gamma}(\mu_i, \phi),
+\end{align}
+where $\mu_i$ is the mean price and $\phi$ is the dispersion parameter.
+
+\begin{align}
+\log(\mu_i) &= \upsilon_0 + \upsilon_1 x_{1} + \upsilon_2 x_{2}+\upsilon_3 x_{3}+... 
+\end{align}
+
+- $\beta_0$: Intercept term.
+- $\upsilon_i$: Coefficients of predictors.
+- $x_i$: Predictors.
+
+Then, based on these assumptions of GLM, we get the final generalized linear model (3):
+
+\begin{align}
+\log(\text{standardized\ and\ exponentiated\ price}) &= \beta_0 + \beta_1 \cdot \text{carat\_size} \nonumber \\
+&\quad + \sum_{i=\text{E}}^{\text{K}}\gamma_i\cdot I(\text{color} = i) \nonumber \\
+&\quad + \sum_{j=\text{Good}}^{\text{Ideal}}\delta_j \cdot I(\text{cut} = j) \nonumber \\
+&\quad + \sum_{k=\text{SI2}}^{\text{IF}} \theta_k \cdot I(\text{clarity} = k).
+\end{align}
+
+- $\beta_0$: Intercept term.
+- $\beta_1$: Coefficients of carat size, indicating the influence of carat weight of diamonds on the logarithmic space of price.  
+- $\gamma_i$: Coefficient of color in category $i$, where $i$ can be D, E, F, G, H, I, J, K.
+- $\delta_j$: Coefficient of cut in category $j$, where $j$ can be Ideal, Excellent, Very Good, Good.
+- $\theta_k$: Coefficient of clarity in category $k$, where $k$ can be IF, VVS1, VVS2, VS1, VS2, SI1, SI2.
+- $I$: Indicator function, used for dummy variable coding of classified variables. Its function is to judge whether the condition in parentheses is true. If the condition is true, the function takes the value of 1; otherwise, it takes the value of 0.
+
+Since the response variable `price` is standardized and exponential-transformed and log-transformed during modeling, predicting the price requires reversing these transformations by only applying the inverse of the standardization because exponential-transformed and log-transformed cancel each other. Thus, the formula for predicting the price is (4):
+
+\begin{align}
+\text{price} &= \log(\text{standardized\ and\ exponentiated\ price}) \cdot \sigma + \mu.
+\end{align}
+
+-   $\sigma$: the standard deviation of price in the training data, which is 2442.597.
+-   $\mu$: the mean of price in the training data, which is 4010.706.
+
+
+
+## Model Justification{#sec-justification}
+
+We expect a positive relationship between predictors (carat size, cut, color and  clarity) and response variable price. To test this relationship, we chose the Generalized Linear Model (GLM) with a Gamma distribution and a log link function. 
+For categorical predictors like color, clarity, and cut, by setting the lowest quality levels (e.g., K for color, SI2 for clarity, and Good for cut) as reference levels, we can directly interpret the coefficients as the incremental effect of higher-quality levels on diamond prices. For continuous predictor carat size, we can interpret the coefficients in the model as how it influence diamond prices. This setup also aligns with our expectation that higher-quality diamonds (in terms of color, clarity, and cut) will positively influence price. 
+
+The Generalized Linear Model (GLM) was chosen for its flexibility and ability to handle diverse response variable distributions. Unlike traditional linear models, which require normally distributed response variables, the GLM accommodates non-normal distributions, making it particularly well-suited for our data where the response variable, diamond price, follows a Gamma distribution, as shown in @fig-price. By specifying the log link function, the GLM captures the nonlinear relationship between the response variable and predictors, allowing for better modeling of the price variability while maintaining interpret ability and precision.
+
+Despite its advantages, the GLM has potential limitations and may not be suitable in certain scenarios. When the distribution of response variable is hard to observe, we may not able to assume its distribution. Furthermore, highly nonlinear relationships may not be adequately captured by the specified link function, requiring alternative modeling approaches. 
+
+Furthermore, to validate and evaluate the model, a test dataset was used to calculate key metrics such as Root Mean Squared Error (RMSE), Mean Absolute Error (MAE), and Mean Squared Error (MSE). These metrics quantify the model's predictive accuracy and help identify potential areas of improvement. And the predicted values and the actual values are visualized and diagnostics are presented. These details are provided in @sec-model-details.
+
+
+## Model Comparision {#sec-compare}
+
+In addition to the generalized linear model, we also explore and compare alternative models, including linear regression and Bayesian regression.
+
+a.Linear Regression Model:
+
+The advantage of Linear model is that the results are easy to explain, and it can provide accurate parameter estimation under the condition of satisfying basic assumptions (such as linear relationship, normality, independence and variance homogeneity). However, its disadvantage is that the assumptions of the data are strict, and when the data violates these assumptions, the estimation of the model may be invalid. We use linear regression model implemented using the `lm` function in @citeR and use training dataset for model fitting and test dataset for model evaluation.
+
+b.Bayesian regression Model:
+
+The advantage of Bayesian model lies in its flexibility, which is especially suitable for scenes with less data, complex distribution or the need to combine prior knowledge. However, the disadvantage of Bayesian model lies in its high computational complexity, and improper selection of prior distribution may significantly affect the inference results. We also use the Bayesian Regression model to analyze the relationship between diamond prices and various predictors, implemented using the `stan_glm` function from the rstanarm package (@rstanarm) in @citeR. The model assumes a Gamma family with a log link function, and the priors are specified as weakly informative: normal distributions (mean = 0, standard deviation = 10) for both the coefficients and intercept, and an exponential distribution (rate = 3) for the auxiliary parameter.
+
+c.Comparision Result:
+
+@tbl-modelcompare shows that the Generalized Linear Model (GLM) outperforms the other models in both predictive accuracy and model parsimony. The GLM achieved the lowest Mean Squared Error (MSE) of 1.627, Mean Absolute Error (MAE) of 0.517, and Root Mean Squared Error (RMSE) of 1.276, indicating superior performance in predicting the scaled and transformed diamond prices. Furthermore, it also has the lowest Akaike Information Criterion (AIC) of 962.513 and Bayesian Information Criterion (BIC) of 1068.332, suggesting that it provides a more parsimonious fit to the data compared to the other models. In contrast, the Linear Model (LM) and Bayesian model demonstrated notably poorer performance. The LM exhibited an MSE of 2.231, an MAE of 0.954, and an RMSE of 1.494, while the Bayesian model displayed an MSE of 6.255, an MAE of 1.775, and an RMSE of 2.501, all significantly higher than the GLM's metrics. Additionally, the AIC and BIC scores for the LM were 6685.589 and 6791.408, respectively, reflecting both higher complexity and inferior predictive power. The Bayesian model, however, lacked calculable AIC and BIC values. The Bayesian model's AIC and BIC values are `NA` because `rstanarm` does not natively calculate these metrics. AIC and BIC are traditionally based on maximum likelihood estimation (MLE), which is not directly applicable to Bayesian models that rely on posterior distributions rather than MLE. Instead, Bayesian models are typically evaluated using metrics like the Deviance Information Criterion (DIC) or the Watanabe-Akaike Information Criterion (WAIC), which are designed to work with posterior distributions. 
+```{r}
+#| echo: false
+#| eval: true
+#| label: tbl-modelcompare
+#| tbl-cap: "Model Comparison Metrics for GLM, LM, and Bayesian Models"
+#| warning: false
+
+#Prepare test data
+test_data <- read_parquet(here("data/02-analysis_data/diamondprice_test_data.parquet"))
+
+test_data$price <- scale(test_data$price, center = TRUE, scale = TRUE)
+test_data$price<-exp(test_data$price)
+test_data$color <- factor(test_data$color)
+test_data$cut <- factor(test_data$cut)
+test_data$clarity <- factor(test_data$clarity)
+
+# Find predictions based on 2 models
+predictions_glm <- predict(model_glm, newdata = test_data, type = "response")
+predictions_lm <- predict(model_lm, newdata = test_data)
+predictions_bayes <- predict(model_bayes, newdata = test_data)
+
+# Calculate MSE
+mse_glm <- mean((test_data$price - predictions_glm)^2)
+mse_glm <- round(mse_glm, 3)
+mse_lm <- mean((test_data$price - predictions_lm)^2)
+mse_lm <- round(mse_lm, 3)
+mse_bayes <- mean((test_data$price - predictions_bayes)^2)
+mse_bayes <- round(mse_bayes, 3)
+
+# Calculate MAE
+mae_glm <- mean(abs(test_data$price - predictions_glm))
+mae_glm <- round(mae_glm, 3)
+mae_lm <- mean(abs(test_data$price - predictions_lm))
+mae_lm <- round(mae_lm, 3)
+mae_bayes <- mean(abs(test_data$price - predictions_bayes))
+mae_bayes <- round(mae_bayes, 3)
+
+# Calculate RMSE
+rmse_glm <- sqrt(mse_glm)
+rmse_glm <- round(rmse_glm, 3)
+rmse_lm <- sqrt(mse_lm)
+rmse_lm <- round(rmse_lm, 3)
+rmse_bayes <- sqrt(mse_bayes)
+rmse_bayes <- round(rmse_bayes, 3)
+
+# Find AIC and BIC
+aic_glm <- AIC(model_glm)
+aic_glm <- round(aic_glm, 3)
+aic_lm <- AIC(model_lm)
+aic_lm <- round(aic_lm, 3)
+aic_bayes <- AIC(model_bayes) # NA
+bic_glm <- BIC(model_glm)
+bic_lm <- BIC(model_lm)
+bic_bayes <- BIC(model_bayes) # NA
+
+
+# Combine results into a data frame for summary
+model_comparison <- data.frame(
+  Model = c("GLM", "LM", "Bayesian"),
+  MSE = c(mse_glm, mse_lm, mse_bayes),
+  MAE = c(mae_glm, mae_lm, mae_bayes),
+  RMSE = c(rmse_glm, rmse_lm, rmse_bayes),
+  AIC = c(aic_glm, aic_lm, NA),
+  BIC = c(bic_glm, bic_lm, NA)
+)
+
+knitr::kable(model_comparison, format = "pipe")
+
+```
+
+
+# Results{#sec-result}
+
+@fig-modelresults shows the relative contribution of carat weight, color, cut and clarity to the diamond price after standardization and exponential transformation and logarithmic transformation. And @fig-modelresults also visualizes the estimated regression coefficient of each variable and its 95% confidence interval. We can find:
+-   Carat Size: Carat weight has the most significant positive impact on diamond price, with a regression coefficient of 3.73. This indicates that as carat weight increases, the diamond price rises, which aligns with expectations.
+
+-   Color: Higher-grade colors (e.g., D) have the largest positive impact on diamond prices, with a coefficient of 1.343 for color D compared to the baseline (K, the lowest grade). Lower-grade colors (e.g., J and I) have progressively smaller positive coefficients, suggesting that price increases are more obvious for diamonds with higher color grades.
+
+-   Clarity: Similar to color, higher clarity grades (e.g., IF and VVS1) positively influence diamond prices. For instance, the coefficient for clarity IF is 0.926, while VVS1 is 0.896, compared to the baseline clarity grade (SI2). Lower clarity grades (closer to the baseline) have relatively smaller positive coefficients, showing their lesser contribution to price increases.
+
+-   Cut: Cut quality has a smaller impact compared to other factors. For example, the "Ideal" cut has a coefficient of 0.216, which indicates a slight positive impact compared to the baseline ("Good" cut). Similarly, "Excellent" and "Very Good" cuts contribute marginally to price increases.
+
+-   Intercept: The intercept of -4.805 represents the baseline value of diamond price (after transformation) when all predictors are at their reference levels (i.e., K for color, SI2 for clarity, and Good for cut).
+
+In summary, carat weight has the most significant impact on diamond prices, followed by clarity and color, while cut quality has a relatively smaller effect. These results suggest that buyers prioritize carat weight and the diamond's visual attributes (color and clarity) over the precision of the cut.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-modelresults
+#| fig-cap: "Model Results"
+
+# Get the coefficients and their confidence intervals
+model_summary <- summary(model_glm)$coefficients
+model_summary_df <- as.data.frame(model_summary)
+model_summary_df$Predictors <- rownames(model_summary_df)
+
+# Calculate 95% confidence intervals
+model_summary_df$CI_Lower <- model_summary_df$Estimate - 1.96 * model_summary_df$`Std. Error`
+model_summary_df$CI_Upper <- model_summary_df$Estimate + 1.96 * model_summary_df$`Std. Error`
+
+# Create the plot
+ggplot(model_summary_df, aes(x = Estimate, y = reorder(Predictors, Estimate))) +
+  geom_point(color = "palevioletred") +  # Coefficients as points
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) +  # Confidence intervals
+  geom_text(aes(label = round(Estimate, 2)), hjust = -0.3, size = 3) +  # Lable estimates
+  theme_minimal() +  # Minimal theme
+  labs(
+    x = "Coefficient Estimate",
+    y = "Predictors"
+  ) + 
+  theme(axis.text.y = element_text(size = 8))  # Adjust y-axis text size
+
+```
+
+
+## Example of Prediction{#sec-example}
+
+To further explain the result of the model, we will show an example of diamond price predictions.
+
+-   Carat size: 1.2
+-   Color: D
+-   Cut: Good
+-   Clarity: VVS2
+
+Based on above features of diamond, we firstly calculate the log(standardized and exponential price). From @fig-modelresults, we can know intercept and the coefficients each variables: 
+
+-   Intercpet: -4.81 
+-   carat size: 3.74
+-   color D: 1.34
+-   cut Good: 0, because it is the reference level
+-   clarity VVS2: 0.89 
+
+We plog these value into formula (3) and can get the log(standardized and exponential price) is around 1.91. Then we will calculate the actual price of the diamond. We plog 1.91 into formula (4) and get the price is around 8678.07. Therefore, we know a diamond with 1.2 carat size, color D, good cut and VVS2 clarity should be approximately 8678.07 USD.
+
+
+# Discussion{#sec-discussion}
+
+## Discussion of Model Result {#sec-exploration}
+
+This study examines how key features of diamonds, such as carat size, color, clarity, and cut, influence their prices. The results show that carat weight has the most significant impact on diamond prices, followed by clarity and color, while cut quality has a relatively smaller effect. These findings highlight the preferences and values that drive consumer behavior and shape industry practices. By understanding the role of each predictor, we can explore the deeper social and cultural meanings behind these choices, such as the importance of visibility, aesthetics, and societal expectations in defining value.
+
+Carat size has the strongest impact on price. Larger diamonds are often associated with wealth, success, and love, making them highly desirable for significant events like engagements and weddings. This focus on size shows how people value physical attributes that are easily noticeable, often linking material possessions to social status and personal achievements. Economically, the preference for size drives demand for larger diamonds, encouraging industries to focus on producing and marketing them as rare and 
+expensive.
+
+Color and clarity also have a strong effect on price. Higher grades in these features lead to much higher prices, which shows that buyers are willing to pay more for diamonds that look perfect or flawless. Even though these differences might not always be noticeable to the average person, marketing and cultural standards make these traits seem important. This focus influences how diamonds are graded and priced, creating a market where beauty and perfection are key drivers of value.
+
+Cut, while important for a diamond's brilliance, has a smaller impact on price compared to the other features. This suggests that buyers may undervalue the craftsmanship behind the cut, focusing instead on features like size and color that are easier to see and compare. This pattern is common in luxury markets, where visible traits often matter more than technical quality or skill.
+
+In conclusion, diamond prices are influenced by a mix of consumer behavior, cultural values, and industry practices. Buyers tend to value features that are visible and easy to compare, driving demand and shaping market trends. This study shows how societal values influence pricing and production, not only in the diamond market but also in other areas of the luxury goods industry.
+
+
+## Limitations{#sec-limitation}
+
+### Data Limitations{#sec-datalimit}
+
+Although the data set is good, there are several limitations, which affect the universality and depth of the research results. A key limitation is the limited price range, which only includes diamonds with a price between 1,000 USD and 10,000 USD. This does not include low-priced and high-end luxury diamonds, which may miss the unique pricing model of these market segments. In addition, the price distribution is seriously tilted to the right, and most of the prices are concentrated between 2500 and 5000 dollars. This imbalance may lead to deviation in the analysis, because diamonds with higher prices may be affected by different market factors and their representation is insufficient.
+
+Another limitation is that the data set narrowly focuses on physical properties, such as carat size, color, clarity and cutting, while ignoring background factors such as brand reputation, certification sources and market trends. These external factors will significantly affect pricing, but they are not considered in the data. In addition, the data set lacks geographical and cultural details, which can provide opinions into regional differences in preferences and needs. This omission limits the global applicability of the research results, because diamond pricing often varies with the market and consumer base.
+
+The dataset also simplifies some predictor variables, particularly cut quality, by classifying them into broad groups (Ideal, Excellent, Very Good, and Good) without accounting for finer details like proportions or symmetry. These details, such as the arrangement of facets or crown angles, are crucial for evaluating a diamond's brilliance and could provide a deeper explanation for price variations. Similarly, the color and clarity variables are not fully represented. For instance, diamond color is graded from D (colorless) to Z (light yellow or brown), but the dataset only includes colors from D to K, leaving out lower-grade colors that could provide additional ideas. Moreover, the absence of time-related factors limits the ability to analyze how diamond prices change over time due to shifts in consumer preferences, market trends, or seasonal effects.
+
+Finally, the data set shows the potential problems of imbalance and lack of diversity. For example, a lower quality cut (good) and a lower color grade (k) are insufficient, which may lead to distorted results and limit the ability to draw conclusions about these groups. In addition, if the data set comes from a single retailer or region, the results may reflect localized pricing strategies or consumer preferences, rather than broader market trends, thus reducing its generalization to other environments.
+
+### Model Limitations{#sec-modellimit}
+One limitation of the GLM model is its inability to fully capture the complexity of diamond price variability due to its fixed distributional assumptions. The use of the Gamma distribution with a log link function, while appropriate for positive and skewed data, may oversimplify the true underlying patterns in the data. This is particularly evident in higher price ranges, where the model underestimates prices. 
+
+Another limitation is in how the predictors are handled. The model treats clarity, color, and cut as categorical variables divided into broad categories, which simplifies their complexity. For example, subtle variations within a clarity grade or interactions between attributes, like how cut quality might impact price differently depending on carat size, are not accounted for. These oversimplifications may prevent the model from capturing more detailed relationships, potentially reducing its predictive accuracy.
+
+
+## Future Direction {#sec-further}
+To improve the depth and reliability of future research, several enhancements to the dataset and model can be considered. Expanding the price range to include both low-cost and luxury diamonds would provide a broader view of pricing patterns across the market. Additionally, addressing imbalances by incorporating underrepresented categories, such as lower-quality cuts and color grades, would reduce bias and improve generalizability. We could also include additional predictors, such as cut proportions, symmetry, and time, to enable a more detailed analysis of pricing factors and facilitate the study of price trends over time, including seasonal effects, and market fluctuations. The model can be improved by adopting more flexible approaches, such as generalized additive models (GAMs) or Bayesian hierarchical models, which can better handle non-linear relationships and interactions between predictors. These methods are particularly useful for capturing complex patterns in data, especially in higher price ranges. And to address variability and outliers, techniques like robust regression or weighted least squares can help manage non-constant variance in residuals, while carefully identifying and examining influential points can reduce their impact on predictions. 
+
+
+
+
+\newpage
+
+\appendix
+
+# Appendix {-}
+
+# Additional Model details {#sec-model-details}
+
+## Predicted Diamond Prices {#sec-predictions}
+
+@fig-prediction_actual compares the predicted prices from the GLM model (blue line) with the scaled and transformed prices from the test dataset (red points). It is important to note that the prices shown in the plot are not the actual diamond prices. The response variable, `price`, was first scaled using z-score normalization and then exponentiated. Additionally, the predictions from the GLM model were transformed using a log link function, which is consistent with the assumptions of the Gamma distribution.
+
+The GLM model captures the general trend of the transformed prices well, especially in the lower and middle ranges. The predicted values closely follow the transformed prices in these areas, indicating that the GLM model performs well for most of the data. However, at higher transformed price levels, the predictions tend to underestimate the values, as indicated by the wider spread of red points compared to the smoother blue line. The variability of the transformed prices increases at higher indices, but the model does not fully capture this. This suggests that the GLM model, with its fixed Gamma distribution and log link function, may oversimplify the behavior of the response variable in these regions. The underestimation at higher levels highlights potential limitations in the model’s assumptions.
+
+In summary, while the GLM model effectively models the scaled and transformed price data for most observations, it struggles to account for the increasing variability in higher ranges. Further refinements, such as addressing variability or investigating the suitability of the distributional assumptions, could improve the model’s performance.
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-prediction_actual
+#| fig-cap: "Actual vs Predicted Values"
+
+# Load and deal with the dataset
+test_data <- read_parquet(here("data/02-analysis_data/diamondprice_test_data.parquet"))
+test_data$price <- scale(test_data$price, center = TRUE, scale = TRUE)
+test_data$price<-exp(test_data$price)
+test_data$color <- factor(test_data$color)
+test_data$cut <- factor(test_data$cut)
+test_data$clarity <- factor(test_data$clarity)
+
+## Generate predicted prices using the generalized linear model (model_glm)
+test_data$predicted_price <- predict(model_glm, newdata = test_data, type = "response")
+
+# Plot the actual vs. predicted prices
+ggplot(data = test_data, aes(x = 1:nrow(test_data))) +
+  # Add a line for predicted prices
+  geom_line(aes(y = predicted_price), color = "lightblue", size = 1, linetype = "solid") +
+  # Add points for actual prices
+  geom_point(aes(y = price), color = "palevioletred", size = 2) + 
+  labs(
+    x = "Index",
+    y = "Price"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(breaks = NULL)
+
+
+```
+
+
+## Evaluation Metrics {#sec-evaluation}
+
+@fig-metrics shows how the Generalized Linear Model (GLM) was evaluated on the test dataset using three key metrics: Mean Squared Error (MSE), Mean Absolute Error (MAE), and Root Mean Squared Error (RMSE). The MSE of 1.627 indicates that the overall squared differences between the predicted and actual diamond prices are relatively small, suggesting that the model captures the relationship between the predictors and the response variable reasonably well. However, since MSE amplifies the impact of larger errors, it is complemented by RMSE for better interpret ability.The MAE of 0.517 shows that, on average, the absolute difference between the predicted and actual values is low. This highlights the model's strong ability to provide accurate predictions in most cases and reflects that its performance is not heavily skewed by outliers. Compared to MSE, MAE is less sensitive to extreme errors, providing a more balanced perspective on prediction accuracy. The RMSE of 1.276, being the square root of MSE, provides a direct measure of the standard deviation of prediction errors in the original data's units. While RMSE tends to be slightly higher than MAE because it gives more weight to larger errors, its relatively low value confirms the model's stability and reliable performance on the test data. However, the gap between RMSE and MAE suggests the presence of some larger errors or outliers that may require further investigation.Overall, these metrics indicate that the GLM performs well in predicting diamond prices, with reasonable accuracy and controlled error levels. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
+#| label: fig-metrics
+#| fig-cap: "GLM Model Metrics"
+
+# Organize GLM data into a table
+glm_metrics <- data.frame(
+  Metric = c("MSE", "MAE", "RMSE"),
+  Value = c(mse_glm, mae_glm, rmse_glm)
+)
+
+# Use knitr::kable to format the table
+knitr::kable(glm_metrics, format = "pipe", col.names = c("Metric", "Value"))
+
+
+
+
+```
+
+
+## Diagnostics{#sec-diagonsis}
+
+@fig-diag from the GLM model shows how well the model performs and whether it follows the key assumptions of the Gamma distribution with a log link.
+
+The "Residuals vs. Fitted" plot indicates a slight curvature in the residuals, particularly at lower fitted values, suggesting potential non-linearity or slight misspecification in the link function. Additionally, the spread of residuals increases slightly for higher fitted values, hinting at heteroscedasticity (non-constant variance). Ideally, residuals should be randomly scattered around zero with no discernible pattern.
+
+The Q-Q plot assesses whether the residuals conform to the theoretical Gamma distribution. While most points follow the diagonal line, deviations are observed in the upper quantiles, with several extreme residuals identified (e.g., points 1930, 1899). These deviations shows that the model may not fully capture the response variable's distribution or that outliers are present. 
+
+The Scale-Location plot further supports evidence of heteroscedasticity, as the variance of residuals increases with higher fitted values. Ideally, the points should be evenly spread around the horizontal line, but the observed increase in variance indicates that the model might benefit from additional adjustments to better handle variability in the response variable. 
+
+The last plot highlights a few potentially influential points (e.g., 1930, 1899, 1924) with higher value. Although none of these points exceed Cook’s distance thresholds, their presence warrants closer examination to ensure they do not disproportionately affect the model.
+
+In summary, the model performs well but shows slight heteroscedasticity and deviations from the Gamma distribution. Addressing these issues and checking outliers may improve reliability and accuracy.
+
+```{r}
+#| echo: false
+#| eval: true
+#| message: false
+#| warning: false
+#| label: fig-diag
+#| fig-cap: "Diagnostics"
+
+# Set the plotting layout to a 2x2 grid for displaying four plots on one screen
+par(mfrow = c(2, 2))
+
+# Generate diagnostic plots for the generalized linear model (model_glm)
+# 1. Residuals vs Fitted: Checks for patterns in residuals to assess linearity and homoscedasticity
+# 2. Normal Q-Q Plot: Assesses whether residuals follow a normal distribution
+# 3. Scale-Location Plot: Examines homogeneity of variance (spread of residuals)
+# 4. Residuals vs Leverage: Identifies influential data points
+plot(model_glm)
+
+```
+
+
+
+
+# Idealized Methodology
+
+## Overview
+
+The purpose of this study is to explore the key factors affecting the price of diamonds, including carat weight, color, clarity and cut. Through multi-wave data collection and strict data quality control, the goal of this study is to build an accurate forecasting model and provide a deep understanding of market trends. The research method combines extensive sample recruitment, diversified data collection techniques and statistical modeling tools to provide reliable basis for quantitative analysis and qualitative interpretation.
+
+## SamplingApproach
+
+In this study, stratified random sampling method is used to ensure that the samples are representative enough.
+
+-   Stratification criteria include geographical area, income level and purchasing preference.
+-   The sample size is set to 3000 to meet the confidence level of 95% and the error range of 3%.
+-   Data sources include diamond retailers, auction platforms and online consumer surveys.
+
+## Recruitment
+
+Participants are recruited through the following channels:
+
+-   Cooperate with major jewelry retailers and market research institutions to obtain target group information through sales data.
+-   Put targeted advertisements on social media and email platforms to attract potential participants to fill in online surveys.
+-   Provide small cash rewards (such as $10 gift cards) or lucky draw opportunities to increase participation rate and reduce bias.
+
+All participants need to sign an electronic informed consent form to ensure that data collection conforms to ethical norms.
+
+## Data Collection and Survey Design
+
+Data is collected through various channels to ensure wide coverage and data quality:
+
+-   The online survey platform is used to collect consumers' purchasing behavior, preferences and socio-economic background data.
+-   Combined with the actual market data (such as transaction records), the questionnaire results are verified.
+
+The questionnaire design includes:
+-   Closed-form questions (multiple choice, Likert scale) to evaluate consumer preferences.
+-   Open-ended questions gain opinions into the factors affecting prices.
+The questionnaire was optimized by small-scale pretest, focusing on reducing the ambiguity of questions and the fatigue of respondents
+
+
+## Data Validation and Quality Control
+
+-   In the data cleaning stage, incomplete and contradictory questionnaire responses were eliminated, and duplicate records were eliminated.
+-   Using outlier detection technology to identify and deal with possible problem data points.
+-   Re-verify key data points by tracking some interviewees to ensure the consistency and reliability of the answers.
+
+
+## Multi-Wave Data Collection and Aggregation
+
+In order to study market trends and price changes, data collection is divided into three waves, each with a quarterly interval:
+
+-   Wave 1: Obtain the data of consumers' price sensitivity and buying habits in peak sales season (such as festivals).
+-   Wave 2: Investigate the off-season market demand and price elasticity.
+-   Wave 3: verify the stability of the model, focusing on the analysis of the changing trend of bulk diamond buying behavior.
+
+The data are aggregated after standardization among waves to ensure the consistency of time series analysis.
+
+
+## Budget Allocation
+
+The total budget is estimated at $75,000.The allocation of funds is as follows:
+
+-   Sample recruitment and incentives (35%): including gift cards and advertising expenses.
+-   Data collection and processing (25%): Covers the cost of online platform and cleaning tools.
+-   Questionnaire design and pilot test (15%): design optimization and forecast trial expenditure.
+-   Data analysis and report writing (15%): including software use and labor costs.
+-   Quality control (10%): data verification and tracking verification costs.
+
+# Idealized Survey
+
+## Survey Questions
+
+**Demographic Questions**:
+
+1. What is your age? (open)
+
+2. What's your gender? (M/F/Other)
+
+3. What is your main source of income? (Fixed income/freelance/other)
+
+**Behavioral Patterns**:
+
+4. How often did you buy diamonds in the past year? (Never/once /2-3 times/more than 3 times)
+
+5. Where do you prefer to buy diamonds? (Holiday gifts/engagement or marriage/investment/other)
+
+**Perceptions and Attitudes**:
+
+6. Which of the following do you think has the greatest influence on the price of diamonds? (carat/color/clarity/cut/brand)
+
+7. How do you evaluate the importance of the following diamond characteristics: carat size, color, clarity, cut? (1- very unimportant, 5- very important)
+
+**Outcome Measures**:
+
+8. Assuming the same price, which of the following diamonds would you prefer to buy? (Grade D color /IF clarity /1.5 carats)
+
+9. Please rate your satisfaction with the last diamond purchase (1- very dissatisfied, 5- very satisfied).
+
+**Open-Ended Questions**
+:
+10. What do you think are the main challenges in the diamond market at present?
+
+11. Please describe the main reason why you choose a diamond.
+
+
+\newpage
+
+# References{#sec-refer}
