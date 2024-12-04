@@ -44,49 +44,14 @@ model_bayes <- readRDS(here("models/bayes.rds"))
 
 # Introduction 
 
-钻石质量的 4C标准，即评判钻石的通用标准：颜色、切割、净度和克拉重量。
+Diamonds have long symbolized luxury, romance, and prestige, with their valuation primarily determined by the Four Cs: Carat weight, Color, Clarity, and Cut. The Gemological Institute of America established this standard to assess diamond quality consistently worldwide. Each of these attributes uniquely influences a diamond's market value. Carat size measures the diamond's mass, with larger diamonds being rarer and typically more valuable. Color grading evaluates the absence of color, ranging from D (colorless) to Z (light yellow or brown), with colorless diamonds commanding higher prices. Clarity shows internal and external imperfections, where fewer inclusions and blemishes enhance value. Cut quality, particularly in round brilliant diamonds, affects light reflection and overall brilliance, significantly impacting aesthetic appeal and price (@GIA4Cs). While the 4Cs provide a framework for valuation, accurately predicting diamond prices remains complex due to the interplay of these characteristics and market dynamics. Recent advancements in data analytics and machine learning have enabled more precise predictions of diamond prices based on their features. For instance, research of @Basha2024 published in the International Journal of System Assurance Engineering and Management, evaluates 23 machine learning models, including regression techniques, to predict diamond prices. The study shows the effectiveness of models like CatBoost Regressor and XGBoost Regressor in achieving high accuracy after hyperparameter tuning. Similarly, @Sharma2021 also conducts a comparative analysis of multiple supervised machine learning models, identifying Random Forest Regressor as particularly effective in predicting diamond prices. Despite these advancements, there remains a need for analyses diamond price based on other models to enhance the accuracy and reliability of diamond price predictions. This research fills this gap by employing a Generalized Linear Model.
 
-# Introduction 
+This study focuses on identifying the significant factors influencing diamond prices and building a reliable model to predict prices based on diamond carat size, color, clarity and cut. The estimand is the expected diamond price given specific attributes of carat weight, color, clarity, and cut.  We use the dataset of diamond price from DASL and use Generalized Linear Model (GLM) with a Gamma distribution and log link function to analysis. It shows shows that carat weight has the strongest positive influence on price, followed by clarity and color, while cut has a relatively smaller impact. The predictive Generalized Linear Model demonstrates good performance on test data, showing its utility in forecasting diamond prices and understanding market patterns. 
 
-The introduction is self-contained and tells a reader everything they need to know including: 1) broader context to motivate; 2) some detail about what the paper is about; 3) a clear gap that needs to be filled; 4) what was done; 5) what was found; 6) why it is important; 7) the structure of the paper. A reader should be able to read only the introduction and know what was done, why, and what was found. Likely 3 or 4 paragraphs.
-
-
-钻石质量的 4C标准，即评判钻石的通用标准：颜色、切割、净度和克拉重量。
-estimand
+Understanding the driving factors of diamond pricing is not only a technical problem, but also an in-depth discussion of the complex dynamics of diamond market. The diamond industry is greatly influenced by consumer preferences and changes in market conditions. Analyzing and accurately predicting the price based on the intrinsic quality of diamonds (carat weight, color, clarity and cut) is not only meaningful for a single transaction, but also involves a wider range of market and social issues. Firstly, the pricing transparency of the diamond market is an important issue. Through a reliable pricing model, opacity can be reduced and a fairer price system can be realized. This not only protects consumers' rights and interests, but also contributes to the development of market. Secondly, studying diamond pricing can help the industry better adapt to the needs of modern consumers. By studying the main influencing factors of diamonds, retailers can optimize their inventory and marketing strategies. For example, if it is found that the weight of carats has the greatest impact on the price, retailers can give priority to the promotion of diamonds with larger carats, and at the same time highlight this feature in market promotion, so as to meet the needs of consumers more effectively. Generally speaking, this study not only provides a more scientific pricing basis for consumers, retailers and appraisers, but also provides guidance for the industry to adapt to dynamic changes.
 
 
-Recent advancements in data analytics and machine learning have enabled more precise predictions of diamond prices based on their features. For instance, research published in the International Journal of System Assurance Engineering and Management(@Basha2024), evaluates 23 machine learning models, including regression techniques, to predict diamond prices. The study shows the effectiveness of models like CatBoost Regressor and XGBoost Regressor in achieving high accuracy after hyperparameter tuning. Similarly, @Sharma2021 also conducts a comparative analysis of multiple supervised machine learning models, identifying Random Forest Regressor as particularly effective in predicting diamond prices.
-Despite these advancements, there remains a need for analyses diamond price based on other models to enhance the accuracy and reliability of diamond price predictions. This research aims to fill this gap by employing a generalized linear regression model to show the significance of each of the 4Cs in determining diamond prices and to predict diamond prices. In this paper, Generalized Linear Model (GLM) with a Gamma distribution and log link function shows that carat weight exerts the strongest positive influence on price, followed by clarity and color, while cut has a relatively smaller impact. The predictive model demonstrates good performance on test data, showing its utility in forecasting diamond prices and understanding market patterns. The estimand of this study is the expected diamond price given specific attributes of carat weight, color, clarity, and cut. This quantifies the direct relationship between the predictors and the response variable, enabling precise and explicable predictions for stakeholders in the diamond market.
-
-
-
-
-
-### Background:
-
-### Research questions:
-
-This study focuses on identifying the significant factors influencing diamond prices and building a reliable regression model to predict prices based on diamond carat size, color, clarity and cut.
-
-
-
-### Research objectives:
-
-
-This study employs a Generalized Linear Model (GLM) with a Gamma distribution and log link function to examine how the 4Cs contribute to variations in diamond prices.The analysis shows that carat weight exerts the strongest positive influence on price, followed by clarity and color, while cut has a relatively smaller impact. The predictive model demonstrates good performance on test data, showing its utility in forecasting diamond prices and understanding market patterns.
-
-### Estimand
-The estimand of this study is the expected diamond price given specific attributes of carat weight, color, clarity, and cut. This quantifies the direct relationship between the predictors and the response variable, enabling precise and explicable predictions for stakeholders in the diamond market.
-
-### why important
-
-
-
-### structure
 The remainder of this paper is structured as follows. @sec-data discusses data overview, response variable, predictor variables, data measurement and data visualization which includes the plots of each variable and its response, as well as plots of variable interactions.@sec-model shows how to generate the generalized linear regression.  @sec-result shows the relationship between carat size, color, cut and clarity in diamond price. @sec-discussion discusses the results of @sec-result going into detail which shows the complex relationship between sociocultural background and diamond price. And it also shows the limitations of research, and proposes the focus that future research should focus on to enhance the depth and accuracy of the research.
-
-
-
 
 
 
@@ -96,7 +61,7 @@ The remainder of this paper is structured as follows. @sec-data discusses data o
 
 The data set has 2690 data and 5 variables. Variables include response variable diamond price, predictor variables Diamond Color, Diamond Carat Size, Diamond Clarity, Diamond Cut. @tbl-dataset summarizes the range, variable type and examples of each variable. The detailed description of each variables will be presented in outcome variable and predictor variables section.To ensure data quality and clarity, all missing values were removed, and column names were standardized for consistency and readability. Additionally, key categorical variables, including color, cut, and clarity, were converted into factors to appropriately represent their categorical nature in the analysis.
 
-We use the statistical programming language R [@citeR], alongside several key libraries and datasets to analyze and visualize data effectively. Our data [@diamonds_data] is sourced from the Data and Story Library, providing detailed attributes of diamonds for multiple regression analysis. Following @tellingstories, we consider how storytelling principles can enhance data interpretation and presentation. The tidyverse ecosystem [@citetidyverse] underpins our data manipulation and visualization, with dplyr [@citedplyr] for data wrangling and ggplot2 integrated packages to create visualizations. The here package [@citehere] simplifies file path management, while knitr [@citeknitr] and patchwork [@patchwork] streamline report generation and composite plotting. Bayesian modeling is conducted with rstanarm [@rstanarm], leveraging robust statistical frameworks. Additionally, caTools [@caTools] aids in statistical operations such as ROC curve analysis, and ggcorrplot [@ggcorrplot] facilitates correlation visualization.
+We use the statistical programming language R [@citeR], alongside several key libraries and datasets to analyze and visualize data effectively. Our data [@diamonds_data] is sourced from the Data and Story Library, providing detailed attributes of diamonds for multiple regression analysis. Following @tellingstories, we consider how storytelling principles can enhance data interpretation and presentation. The tidyverse ecosystem [@citetidyverse] underpins our data manipulation and visualization, with dplyr [@citedplyr] for data wrangling and ggplot2 integrated packages to create visualizations. The here package [@citehere] simplifies file path management, while knitr [@citeknitr] and patchwork [@patchwork] streamline report generation and composite plotting. Bayesian modeling is conducted with rstanarm [@rstanarm], leveraging robust statistical frameworks. Additionally, caTools [@caTools] aids in statistical operations, and ggcorrplot [@ggcorrplot] facilitates correlation visualization.
 
 
 ```{r}
@@ -531,15 +496,15 @@ Furthermore, to validate and evaluate the model, a test dataset was used to calc
 
 In addition to the generalized linear model, we also explore and compare alternative models, including linear regression and Bayesian regression.
 
-a. Linear Regression Model:
+a.Linear Regression Model:
 
 The advantage of Linear model is that the results are easy to explain, and it can provide accurate parameter estimation under the condition of satisfying basic assumptions (such as linear relationship, normality, independence and variance homogeneity). However, its disadvantage is that the assumptions of the data are strict, and when the data violates these assumptions, the estimation of the model may be invalid. We use linear regression model implemented using the `lm` function in @citeR and use training dataset for model fitting and test dataset for model evaluation.
 
-b. Bayesian regression Model:
+b.Bayesian regression Model:
 
 The advantage of Bayesian model lies in its flexibility, which is especially suitable for scenes with less data, complex distribution or the need to combine prior knowledge. However, the disadvantage of Bayesian model lies in its high computational complexity, and improper selection of prior distribution may significantly affect the inference results. We also use the Bayesian Regression model to analyze the relationship between diamond prices and various predictors, implemented using the `stan_glm` function from the rstanarm package (@rstanarm) in @citeR. The model assumes a Gamma family with a log link function, and the priors are specified as weakly informative: normal distributions (mean = 0, standard deviation = 10) for both the coefficients and intercept, and an exponential distribution (rate = 3) for the auxiliary parameter.
 
-c. Comparision Result:
+c.Comparision Result:
 
 @tbl-modelcompare shows that the Generalized Linear Model (GLM) outperforms the other models in both predictive accuracy and model parsimony. The GLM achieved the lowest Mean Squared Error (MSE) of 1.627, Mean Absolute Error (MAE) of 0.517, and Root Mean Squared Error (RMSE) of 1.276, indicating superior performance in predicting the scaled and transformed diamond prices. Furthermore, it also has the lowest Akaike Information Criterion (AIC) of 962.513 and Bayesian Information Criterion (BIC) of 1068.332, suggesting that it provides a more parsimonious fit to the data compared to the other models. In contrast, the Linear Model (LM) and Bayesian model demonstrated notably poorer performance. The LM exhibited an MSE of 2.231, an MAE of 0.954, and an RMSE of 1.494, while the Bayesian model displayed an MSE of 6.255, an MAE of 1.775, and an RMSE of 2.501, all significantly higher than the GLM's metrics. Additionally, the AIC and BIC scores for the LM were 6685.589 and 6791.408, respectively, reflecting both higher complexity and inferior predictive power. The Bayesian model, however, lacked calculable AIC and BIC values. The Bayesian model's AIC and BIC values are `NA` because `rstanarm` does not natively calculate these metrics. AIC and BIC are traditionally based on maximum likelihood estimation (MLE), which is not directly applicable to Bayesian models that rely on posterior distributions rather than MLE. Instead, Bayesian models are typically evaluated using metrics like the Deviance Information Criterion (DIC) or the Watanabe-Akaike Information Criterion (WAIC), which are designed to work with posterior distributions. 
 ```{r}
@@ -695,7 +660,7 @@ One limitation of the GLM model is its inability to fully capture the complexity
 Another limitation is in how the predictors are handled. The model treats clarity, color, and cut as categorical variables divided into broad categories, which simplifies their complexity. For example, subtle variations within a clarity grade or interactions between attributes, like how cut quality might impact price differently depending on carat size, are not accounted for. These oversimplifications may prevent the model from capturing more detailed relationships, potentially reducing its predictive accuracy.
 
 
-## Futurer Direction {#sec-further}
+## Future Direction {#sec-further}
 To improve the depth and reliability of future research, several enhancements to the dataset and model can be considered. Expanding the price range to include both low-cost and luxury diamonds would provide a broader view of pricing patterns across the market. Additionally, addressing imbalances by incorporating underrepresented categories, such as lower-quality cuts and color grades, would reduce bias and improve generalizability. We could also include additional predictors, such as cut proportions, symmetry, and time, to enable a more detailed analysis of pricing factors and facilitate the study of price trends over time, including seasonal effects, and market fluctuations. The model can be improved by adopting more flexible approaches, such as generalized additive models (GAMs) or Bayesian hierarchical models, which can better handle non-linear relationships and interactions between predictors. These methods are particularly useful for capturing complex patterns in data, especially in higher price ranges. And to address variability and outliers, techniques like robust regression or weighted least squares can help manage non-constant variance in residuals, while carefully identifying and examining influential points can reduce their impact on predictions. 
 
 
@@ -864,11 +829,6 @@ The total budget is estimated at $75,000.The allocation of funds is as follows:
 -   Quality control (10%): data verification and tracking verification costs.
 
 # Idealized Survey
-
-The idealized survey questionnaire can be accessed via the following link:
-
-https://docs.google.com/forms/d/e/1FAIpQLSe9YMFwC4RHHg36c1VY8yA-cZpdrN32yZfeCMJf_jD3qweOQg/viewform?usp=sf_link
-
 
 ## Survey Questions
 
