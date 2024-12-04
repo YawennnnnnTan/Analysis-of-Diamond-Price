@@ -803,6 +803,8 @@ plot(model_glm)
 
 The purpose of this study is to explore the key factors affecting the price of diamonds, including carat weight, color, clarity and cut. Through multi-wave data collection and strict data quality control, the goal of this study is to build an accurate forecasting model and provide a deep understanding of market trends. The research method combines extensive sample recruitment, diversified data collection techniques and statistical modeling tools to provide reliable basis for quantitative analysis and qualitative interpretation.
 
+This methodology draws upon existing literature to guide its framework. For example, @verbeek2017 points out the importance of stratified sampling and multi-wave data collection in ensuring representative and reliable datasets in market studies. Similarly, @syverson2019 emphasizes the role of data standardization and cleaning in enhancing the accuracy of econometric modeling. These references underpin the methodological rigor employed in this study, ensuring that it aligns with established best practices in empirical research.
+
 ## SamplingApproach
 
 In this study, stratified random sampling method is used to ensure that the samples are representative enough.
@@ -863,6 +865,10 @@ The total budget is estimated at $75,000.The allocation of funds is as follows:
 -   Quality control (10%): data verification and tracking verification costs.
 
 # Idealized Survey
+
+The survey aims to find consumer behavior, preferences, and perceptions related to diamonds. The survey design incorporates both structured and open-ended questions to balance quantitative rigor with qualitative ideas. Questions address demographic characteristics, behavioral patterns, perceptions of diamond characteristics, and satisfaction with previous purchases.
+
+This survey design is informed by prior research. For example, @dhaliwal2020 analyzes the importance of open-ended questions in uncovering consumer preferences in the luxury market. In addition, @wilson2018 recommend a mix of Likert-scale and multiple-choice questions to enhance respondent engagement and reduce fatigue. These studies guide the development of a good questionnaire that maximizes data quality while ensuring respondent satisfaction.
 
 ## Survey Questions
 
