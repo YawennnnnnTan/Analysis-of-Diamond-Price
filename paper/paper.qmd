@@ -46,6 +46,50 @@ model_bayes <- readRDS(here("models/bayes.rds"))
 
 钻石质量的 4C标准，即评判钻石的通用标准：颜色、切割、净度和克拉重量。
 
+# Introduction 
+
+The introduction is self-contained and tells a reader everything they need to know including: 1) broader context to motivate; 2) some detail about what the paper is about; 3) a clear gap that needs to be filled; 4) what was done; 5) what was found; 6) why it is important; 7) the structure of the paper. A reader should be able to read only the introduction and know what was done, why, and what was found. Likely 3 or 4 paragraphs.
+
+
+钻石质量的 4C标准，即评判钻石的通用标准：颜色、切割、净度和克拉重量。
+estimand
+
+
+Recent advancements in data analytics and machine learning have enabled more precise predictions of diamond prices based on their features. For instance, research published in the International Journal of System Assurance Engineering and Management(@Basha2024), evaluates 23 machine learning models, including regression techniques, to predict diamond prices. The study shows the effectiveness of models like CatBoost Regressor and XGBoost Regressor in achieving high accuracy after hyperparameter tuning. Similarly, @Sharma2021 also conducts a comparative analysis of multiple supervised machine learning models, identifying Random Forest Regressor as particularly effective in predicting diamond prices.
+Despite these advancements, there remains a need for analyses diamond price based on other models to enhance the accuracy and reliability of diamond price predictions. This research aims to fill this gap by employing a generalized linear regression model to show the significance of each of the 4Cs in determining diamond prices and to predict diamond prices. In this paper, Generalized Linear Model (GLM) with a Gamma distribution and log link function shows that carat weight exerts the strongest positive influence on price, followed by clarity and color, while cut has a relatively smaller impact. The predictive model demonstrates good performance on test data, showing its utility in forecasting diamond prices and understanding market patterns. The estimand of this study is the expected diamond price given specific attributes of carat weight, color, clarity, and cut. This quantifies the direct relationship between the predictors and the response variable, enabling precise and explicable predictions for stakeholders in the diamond market.
+
+
+
+
+
+### Background:
+
+### Research questions:
+
+This study focuses on identifying the significant factors influencing diamond prices and building a reliable regression model to predict prices based on diamond carat size, color, clarity and cut.
+
+
+
+### Research objectives:
+
+
+This study employs a Generalized Linear Model (GLM) with a Gamma distribution and log link function to examine how the 4Cs contribute to variations in diamond prices.The analysis shows that carat weight exerts the strongest positive influence on price, followed by clarity and color, while cut has a relatively smaller impact. The predictive model demonstrates good performance on test data, showing its utility in forecasting diamond prices and understanding market patterns.
+
+### Estimand
+The estimand of this study is the expected diamond price given specific attributes of carat weight, color, clarity, and cut. This quantifies the direct relationship between the predictors and the response variable, enabling precise and explicable predictions for stakeholders in the diamond market.
+
+### why important
+
+
+
+### structure
+The remainder of this paper is structured as follows. @sec-data discusses data overview, response variable, predictor variables, data measurement and data visualization which includes the plots of each variable and its response, as well as plots of variable interactions.@sec-model shows how to generate the generalized linear regression.  @sec-result shows the relationship between carat size, color, cut and clarity in diamond price. @sec-discussion discusses the results of @sec-result going into detail which shows the complex relationship between sociocultural background and diamond price. And it also shows the limitations of research, and proposes the focus that future research should focus on to enhance the depth and accuracy of the research.
+
+
+
+
+
+
 # Data {#sec-data}
 
 ## Overview {#sec-overview}
