@@ -1,12 +1,12 @@
 ---
-title: "my title"
-subtitle: "subtitle"
+title: "Predicting Diamond Pricing: A Generalized Linear Model Analysis"
+subtitle: "Carat Weight Dominates While Cut Plays a Smaller Role in Determining Price"
 author: 
   - Yawen Tan
 thanks: "Code and data are available at: [https://github.com/YawennnnnnTan/Analysis-of-Diamond-Price]"
 date: today
 date-format: long
-abstract: "4 sentence"
+abstract: "This paper investigates how the Four Cs—carat weight, color, clarity, and cut—affect diamond pricing and develops a predictive model using a Generalized Linear Model (GLM) with a Gamma distribution. The analysis shows that carat weight has the strongest positive influence on price, followed by clarity and color, while cut has a relatively smaller impact. The model demonstrates robust performance, providing a reliable framework for forecasting diamond prices and understanding market patterns. These findings enhance pricing transparency, help the diamond industry adapt to shifting consumer preferences, and offer valuable insights into the economic and cultural factors shaping diamond valuation."
 format: pdf
 number-sections: true
 bibliography: 
@@ -63,6 +63,8 @@ The data set has 2690 data and 5 variables. Variables include response variable 
 
 We use the statistical programming language R [@citeR], alongside several key libraries and datasets to analyze and visualize data effectively. Our data [@diamonds_data] is sourced from the Data and Story Library, providing detailed attributes of diamonds for multiple regression analysis. Following @tellingstories, we consider how storytelling principles can enhance data interpretation and presentation. The tidyverse ecosystem [@citetidyverse] underpins our data manipulation and visualization, with dplyr [@citedplyr] for data wrangling and ggplot2 integrated packages to create visualizations. The here package [@citehere] simplifies file path management, while knitr [@citeknitr] and patchwork [@patchwork] streamline report generation and composite plotting. Bayesian modeling is conducted with rstanarm [@rstanarm], leveraging robust statistical frameworks. Additionally, caTools [@caTools] aids in statistical operations, and ggcorrplot [@ggcorrplot] facilitates correlation visualization.
 
+The reason that I chose DASL is its directness and openness of data. The data set focuses on the diamond market, contains detailed 4C attributes and prices, directly supports the research objectives, and is completely open, ensuring the repeatability and transparency of the analysis. Additionally, there does not exist other data set about diamond price in the data set licensed in @tellingstories. However, we can find data about diamond prices from diamond retailers (such as Blue Nile or James Allen). However, these data sets usually come from commercial use, so they may have deviations from the inventory or pricing strategies of specific retailers. This deviation will limit the universality of the research results in a wider market. In addition, there may be some access restrictions to obtain the complete version of these data.
+
 
 ```{r}
 #| echo: false
@@ -115,7 +117,7 @@ knitr::kable(
 
 @gia_4cs illustrates the measurement of diamond features. Color is conducted by comparing the diamond against GIA’s master stones (graded from D to Z) under controlled lighting and background conditions, as light sources significantly affect appearance. At least two graders assess each diamond's color, with additional graders involved if discrepancies arise, until a consensus is reached. Clarity is performed under 10x magnification in standard observation conditions, where the grader examines internal and external characteristics, documenting inclusions, blemishes, or treatments such as laser drilling or fracture filling. Cut utilizes high-precision instruments to measure cutting proportions, angles, symmetry, and polish quality, following international standards set by organizations like GIA or AGS, with grades such as Excellent and Very Good. Carat size is determined using highly accurate electronic microbalances, capable of measuring to five decimal places, or one ten-thousandth of a carat, complemented by optical devices to assess the diamond’s proportions, dimensions, and facet angles. 
 
-
+Furthermore, @diamonds_data comes from the data crawled by Lou Valente of JMP from the Internet, and is arranged into a form suitable for educational and research purposes. This data collection method shows that the data may be collected from publicly available diamond market information or industry-related websites (such as retailer data or industry reports), and then cleaned and structured to ensure that it is suitable for statistical analysis and modeling tasks.
 
 
 
@@ -622,7 +624,6 @@ ggplot(model_summary_df, aes(x = Estimate, y = reorder(Predictors, Estimate))) +
 ```
 
 
-
 ## Example of Prediction{#sec-example}
 
 
@@ -701,10 +702,11 @@ ggplot(data = test_data, aes(x = 1:nrow(test_data))) +
   geom_point(aes(y = price), color = "palevioletred", size = 2) + 
   labs(
     x = "Index",
-    y = "log(scale(Price)"
+    y = "Price"
   ) +
   theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5)) 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(breaks = NULL)
 
 
 ```
