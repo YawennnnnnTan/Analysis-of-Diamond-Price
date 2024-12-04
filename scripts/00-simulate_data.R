@@ -20,7 +20,7 @@ n <- 141
 
 # Generate simulated data
 simulated_data <- data.frame(
-  price = sample(1000:10000, n, replace = TRUE), # Price range: 1000-10000 as integers
+  price = sample(1000:10000, n, replace = TRUE), # Price range: 1000-10000
   color = sample(c('D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'), n, replace = TRUE), # Color categories
   cut = sample(c('Ideal', 'Good', 'Very Good', 'Excellent'), n, replace = TRUE), # Cut categories
   clarity = sample(c('IF', 'VVS1', 'VVS2', 'VS1', 'VS2', 'SI1', 'SI2'), n, replace = TRUE), # Clarity categories
