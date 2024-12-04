@@ -87,3 +87,83 @@ Make sure to verify the version of caTools you are using in R with packageVersio
 
 
 
+User:
+https://link.springer.com/article/10.1007/s13198-024-02535-0?utm_source=chatgpt.com
+
+could you write reference.bib for this reference
+ChatGPT：
+ChatGPT
+Here’s the BibTeX entry for the provided Springer article:
+
+bibtex
+@article{springer_article,
+  author       = {Author(s)},
+  title        = {Title of the Article},
+  journal      = {International Journal of System Assurance Engineering and Management},
+  volume       = {15},
+  year         = {2024},
+  pages        = {Article-specific pages},
+  doi          = {10.1007/s13198-024-02535-0},
+  url          = {https://link.springer.com/article/10.1007/s13198-024-02535-0},
+  note         = {Accessed: 2024-12-02}
+}
+Instructions:
+Replace Author(s) with the actual author names from the article.
+Replace Title of the Article with the actual title of the article.
+Replace Article-specific pages with the page numbers if available.
+Let me know if you'd like me to extract the full details of the article for you!
+
+
+
+
+
+
+User：
+full details
+ChatGPT：
+ChatGPT
+Here is the complete BibTeX entry for the article titled "Predictive modeling and benchmarking for diamond price estimation: integrating classification, regression, hyperparameter tuning and execution time analysis":
+
+bibtex
+@article{Basha2024,
+  author       = {Md Shaik Amzad Basha and Peerzadah Mohammad Oveis},
+  title        = {Predictive Modeling and Benchmarking for Diamond Price Estimation: Integrating Classification, Regression, Hyperparameter Tuning and Execution Time Analysis},
+  journal      = {International Journal of System Assurance Engineering and Management},
+  volume       = {15},
+  pages        = {5279--5313},
+  year         = {2024},
+  month        = {October},
+  doi          = {10.1007/s13198-024-02535-0},
+  url          = {https://link.springer.com/article/10.1007/s13198-024-02535-0},
+  note         = {Accessed: 2024-12-03}
+}
+This entry includes all necessary details for citing the article in academic works.
+
+
+
+
+
+
+
+User:
+here is citation and write in reference.bib:
+G. Sharma, V. Tripathi, M. Mahajan and A. Kumar Srivastava, "Comparative Analysis of Supervised Models for Diamond Price Prediction," 2021 11th International Conference on Cloud Computing, Data Science & Engineering (Confluence), Noida, India, 2021, pp. 1019-1022, doi: 10.1109/Confluence51648.2021.9377183. keywords: {Training;Analytical models;Predictive models;Diamond;Data models;Regression tree analysis;Random forests;Supervised Machine Learning Models;Correlation Matrix;Model Selection},
+
+ChatGPT：
+ChatGPT
+Here is the reference.bib entry for the provided citation:
+
+bibtex
+@inproceedings{Sharma2021,
+  author       = {G. Sharma and V. Tripathi and M. Mahajan and A. Kumar Srivastava},
+  title        = {Comparative Analysis of Supervised Models for Diamond Price Prediction},
+  booktitle    = {2021 11th International Conference on Cloud Computing, Data Science \& Engineering (Confluence)},
+  location     = {Noida, India},
+  year         = {2021},
+  pages        = {1019--1022},
+  doi          = {10.1109/Confluence51648.2021.9377183},
+  keywords     = {Training, Analytical models, Predictive models, Diamond, Data models, Regression tree analysis, Random forests, Supervised Machine Learning Models, Correlation Matrix, Model Selection}
+}
+This BibTeX entry is formatted to include all the details, including keywords. Let me know if you need further modifications!
+
+
