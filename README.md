@@ -21,4 +21,4 @@ This paper investigates how the Four Csâ€”carat weight, color, clarity, and cutâ
 -   Render paper/paper.qmd to generate the PDF of the paper
 
 # Statement on LLM Usage
-Parts of this project were developed with assistance from ChatGPT-4o. The complete interaction history is available in other/inputs/llms, ensuring transparency in the use of AI tools during the workflow
+Parts of this project were developed with assistance from ChatGPT-4o. The complete interaction history is available in other/llm_usage, ensuring transparency in the use of AI tools during the workflow
