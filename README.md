@@ -1,4 +1,4 @@
-# Analysis-of-Diamond-Price
+# Analysis of Diamond Price
 This paper investigates how the Four Cs—carat weight, color, clarity, and cut—affect diamond pricing and develops a predictive model using a Generalized Linear Model (GLM) with a Gamma distribution. The analysis shows that carat weight has the strongest positive influence on price, followed by clarity and color, while cut has a relatively smaller impact. The model demonstrates robust performance, providing a reliable framework for forecasting diamond prices and understanding market patterns. These findings enhance pricing transparency, help the diamond industry adapt to shifting consumer preferences, and offer valuable insights into the economic and cultural factors shaping diamond valuation.
 
 
