@@ -10,7 +10,7 @@ abstract: "This paper investigates how the Four Cs—carat weight, color, clarit
 format: pdf
 number-sections: true
 bibliography: 
-  - references .bib
+  - references.bib
 toc: true
 ---
 
