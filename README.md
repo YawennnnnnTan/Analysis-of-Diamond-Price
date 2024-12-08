@@ -10,7 +10,7 @@ This paper investigates how the Four Csâ€”carat weight, color, clarity, and cutâ
 -   paper: Houses the research paper files, including the Quarto document, references bibliography, and the final PDF.
 -   scripts: Contains R scripts for data simulation, data download, data cleaning, data testing, data analysis and modeling.
 
-## How to run
+# How to run
 -   Run scripts/00-simulate_data.R to simulate diamond data
 -   Run scripts/01-test_simulated_data.R to test simulate diamond data
 -   Run scripts/02-download_data.R to download raw data from DADL
