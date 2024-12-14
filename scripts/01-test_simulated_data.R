@@ -75,3 +75,40 @@ if (all(!is.na(simulated_data))) {
 } else {
   stop("Test Failed: The dataset contains missing values.")
 }
+
+
+# Check if 'price' is numeric
+if (is.numeric(simulated_data$price)) {
+  message("Test Passed: 'price' column is numeric.")
+} else {
+  stop("Test Failed: 'price' column is not numeric.")
+}
+
+# Check if 'color' is character
+if (is.character(simulated_data$color)) {
+  message("Test Passed: 'color' column is character.")
+} else {
+  stop("Test Failed: 'color' column is not character.")
+}
+
+# Check if 'cut' is character
+if (is.character(simulated_data$cut)) {
+  message("Test Passed: 'cut' column is character.")
+} else {
+  stop("Test Failed: 'cut' column is not character.")
+}
+
+# Check if 'clarity' is character
+if (is.character(simulated_data$clarity)) {
+  message("Test Passed: 'clarity' column is character.")
+} else {
+  stop("Test Failed: 'clarity' column is not character.")
+}
+
+# Check if 'carat_size' is numeric
+if (is.numeric(simulated_data$carat_size)) {
+  message("Test Passed: 'carat_size' column is numeric.")
+} else {
+  stop("Test Failed: 'carat_size' column is not numeric.")
+}
+
